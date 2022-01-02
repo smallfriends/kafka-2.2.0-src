@@ -53,11 +53,11 @@ public class Producer extends Thread {
         while (true) {
             String messageStr = "Message_" + messageNo;
             long startTime = System.currentTimeMillis();
-            if (isAsync) { // Send asynchronously
+            if (isAsync) { // Send asynchronously,生产中一般都是使用异步发送
                 producer.send(new ProducerRecord<>(topic,
                     messageNo,
                     messageStr), new DemoCallBack(startTime, messageNo, messageStr));
-            } else { // Send synchronously
+            } else { // Send synchronously,同步发送效率很低
                 try {
                     producer.send(new ProducerRecord<>(topic,
                         messageNo,
@@ -95,6 +95,14 @@ class DemoCallBack implements Callback {
      */
     public void onCompletion(RecordMetadata metadata, Exception exception) {
         long elapsedTime = System.currentTimeMillis() - startTime;
+        if(exception != null) {
+            System.out.println("有异常");
+            //一般在生产中，会有其他的备用链路在这里
+            //在异步发送消息的时候，如果出现了异常，可以在这里做一些补偿机制
+        } else {
+            System.out.println("没有说明没有异常信息，消息成功发送！！");
+        }
+
         if (metadata != null) {
             System.out.println(
                 "message(" + key + ", " + message + ") sent to partition(" + metadata.partition() +
