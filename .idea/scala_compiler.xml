@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaCompilerConfiguration">
+    <profile name="Gradle 1" modules="kafka-2.2.0-src.core.main,kafka-2.2.0-src.core.test,kafka-2.2.0-src.streams.streams-scala.main,kafka-2.2.0-src.streams.streams-scala.test">
+      <option name="postfixOps" value="true" />
+      <option name="implicitConversions" value="true" />
+      <option name="existentials" value="true" />
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-target:jvm-1.8" />
+        <parameter value="-encoding" />
+        <parameter value="utf8" />
+        <parameter value="-Xlog-reflective-calls" />
+        <parameter value="-Xlint:by-name-right-associative" />
+        <parameter value="-Xlint:delayedinit-select" />
+        <parameter value="-Xlint:doc-detached" />
+        <parameter value="-Xlint:missing-interpolator" />
+        <parameter value="-Xlint:nullary-override" />
+        <parameter value="-Xlint:nullary-unit" />
+        <parameter value="-Xlint:option-implicit" />
+        <parameter value="-Xlint:package-object-classes" />
+        <parameter value="-Xlint:poly-implicit-overload" />
+        <parameter value="-Xlint:private-shadow" />
+        <parameter value="-Xlint:stars-align" />
+        <parameter value="-Xlint:type-parameter-shadow" />
+        <parameter value="-Xlint:unsound-match" />
+        <parameter value="-Xlint:constant" />
+        <parameter value="-Xlint:unused" />
+      </parameters>
+    </profile>
+  </component>
+</project>

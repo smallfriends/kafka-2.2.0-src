@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.apache.directory.mavibot:mavibot:1.0.0-M8">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.mavibot/mavibot/1.0.0-M8/511d8c0027a44eff79199ad5ef9bd16c00768e10/mavibot-1.0.0-M8.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.mavibot/mavibot/1.0.0-M8/c225843b0ac7892d749e75efc58f1b8872635bac/mavibot-1.0.0-M8-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

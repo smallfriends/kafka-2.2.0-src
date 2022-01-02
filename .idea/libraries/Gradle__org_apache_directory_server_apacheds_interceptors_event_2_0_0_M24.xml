@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.apache.directory.server:apacheds-interceptors-event:2.0.0-M24">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-event/2.0.0-M24/466b6872384c16a6d2fce102783f5aa22dc654a3/apacheds-interceptors-event-2.0.0-M24.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-event/2.0.0-M24/9e92d82a13f6f071a7d7810a32c98480ce54bca7/apacheds-interceptors-event-2.0.0-M24-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

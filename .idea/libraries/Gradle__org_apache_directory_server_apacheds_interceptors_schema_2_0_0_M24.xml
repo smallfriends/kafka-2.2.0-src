@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.apache.directory.server:apacheds-interceptors-schema:2.0.0-M24">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-schema/2.0.0-M24/48a910ceb3aba82c16193e7147f21fcf9220474f/apacheds-interceptors-schema-2.0.0-M24.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-schema/2.0.0-M24/bed778e8d05be7510bdfc4a247a276459f22a36a/apacheds-interceptors-schema-2.0.0-M24-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

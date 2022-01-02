@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="delegatedBuild" value="true" />
+        <option name="testRunner" value="GRADLE" />
+        <option name="distributionType" value="LOCAL" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleHome" value="$PROJECT_DIR$/../../Program Files/gradle-5.5" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/clients" />
+            <option value="$PROJECT_DIR$/connect" />
+            <option value="$PROJECT_DIR$/connect/api" />
+            <option value="$PROJECT_DIR$/connect/basic-auth-extension" />
+            <option value="$PROJECT_DIR$/connect/file" />
+            <option value="$PROJECT_DIR$/connect/json" />
+            <option value="$PROJECT_DIR$/connect/runtime" />
+            <option value="$PROJECT_DIR$/connect/transforms" />
+            <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/examples" />
+            <option value="$PROJECT_DIR$/generator" />
+            <option value="$PROJECT_DIR$/jmh-benchmarks" />
+            <option value="$PROJECT_DIR$/log4j-appender" />
+            <option value="$PROJECT_DIR$/streams" />
+            <option value="$PROJECT_DIR$/streams/examples" />
+            <option value="$PROJECT_DIR$/streams/streams-scala" />
+            <option value="$PROJECT_DIR$/streams/test-utils" />
+            <option value="$PROJECT_DIR$/streams/upgrade-system-tests-0100" />
+            <option value="$PROJECT_DIR$/streams/upgrade-system-tests-0101" />
+            <option value="$PROJECT_DIR$/streams/upgrade-system-tests-0102" />
+            <option value="$PROJECT_DIR$/streams/upgrade-system-tests-0110" />
+            <option value="$PROJECT_DIR$/streams/upgrade-system-tests-10" />
+            <option value="$PROJECT_DIR$/streams/upgrade-system-tests-11" />
+            <option value="$PROJECT_DIR$/streams/upgrade-system-tests-20" />
+            <option value="$PROJECT_DIR$/streams/upgrade-system-tests-21" />
+            <option value="$PROJECT_DIR$/tools" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

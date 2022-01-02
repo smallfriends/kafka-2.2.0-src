@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.apache.directory.api:api-ldap-model:1.0.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.api/api-ldap-model/1.0.0/f165ffb59e93d9190b601400776ac102764137c1/api-ldap-model-1.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.api/api-ldap-model/1.0.0/f7d137018be579efee23f500072ee4465c2bc693/api-ldap-model-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

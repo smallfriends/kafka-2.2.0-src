@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.apache.directory.api:api-all:1.0.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.api/api-all/1.0.2/5a0f957dfe453ecaa6e7cbb19d2698083116e123/api-all-1.0.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.api/api-all/1.0.2/29a120a43b078b6145de66c2ac6b59f4fde997c1/api-all-1.0.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

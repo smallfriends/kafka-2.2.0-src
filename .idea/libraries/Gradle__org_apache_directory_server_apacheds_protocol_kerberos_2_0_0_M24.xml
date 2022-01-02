@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.apache.directory.server:apacheds-protocol-kerberos:2.0.0-M24">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-protocol-kerberos/2.0.0-M24/5ab139de4d740b797424ea692738b5f86d32a42/apacheds-protocol-kerberos-2.0.0-M24.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-protocol-kerberos/2.0.0-M24/3fe66f6dfcd4e76a2e7ab40139be4fb736167225/apacheds-protocol-kerberos-2.0.0-M24-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

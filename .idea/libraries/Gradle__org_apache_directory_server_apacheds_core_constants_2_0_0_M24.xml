@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.apache.directory.server:apacheds-core-constants:2.0.0-M24">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-core-constants/2.0.0-M24/1f0d4dad1102c7be4b8a6d877d928625b7f2e4e9/apacheds-core-constants-2.0.0-M24.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-core-constants/2.0.0-M24/f3f2e1851cd71c9dcab659d711240147f40ca487/apacheds-core-constants-2.0.0-M24-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
