@@ -442,9 +442,13 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                 this.metadata.bootstrap(addresses, time.milliseconds());
             }
             this.errors = this.metrics.sensor("errors");
+            //初始化Sender线程，包含了业务代码
             this.sender = newSender(logContext, kafkaClient, this.metadata);
             String ioThreadName = NETWORK_THREAD_PREFIX + " | " + clientId;
+            //线程带代码
+            //把业务代码与线程代码进行隔离，这样会显得清晰
             this.ioThread = new KafkaThread(ioThreadName, this.sender, true);
+            //启动线程
             this.ioThread.start();
             config.logUnused();
             AppInfoParser.registerAppInfo(JMX_PREFIX, clientId, metrics);
@@ -472,7 +476,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                 maxInflightRequests,
                 producerConfig.getLong(ProducerConfig.RECONNECT_BACKOFF_MS_CONFIG),
                 producerConfig.getLong(ProducerConfig.RECONNECT_BACKOFF_MAX_MS_CONFIG),
+                //128k
                 producerConfig.getInt(ProducerConfig.SEND_BUFFER_CONFIG),
+                //32k
                 producerConfig.getInt(ProducerConfig.RECEIVE_BUFFER_CONFIG),
                 requestTimeoutMs,
                 ClientDnsLookup.forConfig(producerConfig.getString(ProducerConfig.CLIENT_DNS_LOOKUP_CONFIG)),
@@ -481,7 +487,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                 apiVersions,
                 throttleTimeSensor,
                 logContext);
+        //重试次数
         int retries = configureRetries(producerConfig, transactionManager != null, log);
+        //获取acks参数，0、1、-1，一般设置为1
         short acks = configureAcks(producerConfig, transactionManager != null, log);
         return new Sender(logContext,
                 client,
