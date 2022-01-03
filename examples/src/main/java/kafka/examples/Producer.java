@@ -33,7 +33,7 @@ public class Producer extends Thread {
     private final Boolean isAsync;
 
     /**
-     *
+     * 构造方法，初始化生产者对象
      * @param topic
      * @param isAsync
      */
