@@ -63,13 +63,19 @@ public class Metadata implements Closeable {
 
     public static final long TOPIC_EXPIRY_MS = 5 * 60 * 1000;
     private static final long TOPIC_EXPIRY_NEEDS_UPDATE = -1L;
-
+    //更新元数据失败重试请求的最小时间间隔，默认值是100ms，目的是减少网络的压力
     private final long refreshBackoffMs;
+    //多久自动更新一次元数据，默认值是5分钟更新一次
     private final long metadataExpireMs;
+    //对于Producer来说，元数据是由版本号的
     private int version;
+    //上一次更新元数据的时间
     private long lastRefreshMs;
+    //上一次成功更新元数据的时间
     private long lastSuccessfulRefreshMs;
+    //SASL权限相关，如果出现该错误，会停止更新
     private AuthenticationException authenticationException;
+    //kafka集群本身的元数据对象
     private MetadataCache cache = MetadataCache.empty();
     private boolean needUpdate;
     /* Topics with expiry time */
@@ -352,7 +358,7 @@ public class Metadata implements Closeable {
         Set<String> unavailableTopics = metadataResponse.unavailableTopics();
         Cluster clusterForListeners = this.cache.cluster();
         fireListeners(clusterForListeners, unavailableTopics);
-
+        //是否更新所有topic的元数据
         if (this.needMetadataForAllTopics) {
             // the listener may change the interested topics, which could cause another metadata refresh.
             // If we have already fetched all topics, however, another fetch should be unnecessary.

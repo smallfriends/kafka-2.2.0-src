@@ -22,9 +22,13 @@ package org.apache.kafka.common;
 public class PartitionInfo {
     private final String topic;
     private final int partition;
+    //leader partition所在的节点
     private final Node leader;
+    //所有副本所在的节点
     private final Node[] replicas;
+    //ISR列表中的副本所在的节点列表
     private final Node[] inSyncReplicas;
+    //非ISR列表中的副本所在的节点列表
     private final Node[] offlineReplicas;
 
     // Used only by tests

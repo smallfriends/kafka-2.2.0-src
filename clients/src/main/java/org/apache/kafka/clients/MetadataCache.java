@@ -39,11 +39,16 @@ import java.util.stream.Collectors;
  */
 class MetadataCache {
     private final String clusterId;
+    //kafka集群的节点列表
     private final List<Node> nodes;
+    //没有授权的topic列表
     private final Set<String> unauthorizedTopics;
     private final Set<String> invalidTopics;
+    //内置的topic列表
     private final Set<String> internalTopics;
+    //controller所在的节点
     private final Node controller;
+    //每个topic分区的详细信息
     private final Map<TopicPartition, PartitionInfoAndEpoch> metadataByPartition;
 
     private Cluster clusterInstance;
