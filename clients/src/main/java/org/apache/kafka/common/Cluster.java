@@ -44,6 +44,7 @@ public final class Cluster {
     private final Map<String, List<PartitionInfo>> partitionsByTopic;
     private final Map<String, List<PartitionInfo>> availablePartitionsByTopic;
     private final Map<Integer, List<PartitionInfo>> partitionsByNode;
+    //brokerId与Node的关系，比如broker.id=0，对应在node01上
     private final Map<Integer, Node> nodesById;
     private final ClusterResource clusterResource;
 

@@ -892,7 +892,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             // first make sure the metadata for the topic is available
             ClusterAndWaitTime clusterAndWaitTime;
             try {
-                //第一步：同步等待拉取元数据
+                //第一步，同步等待拉取元数据
                 //maxBlockTimeMs默认等待1m
                 clusterAndWaitTime = waitOnMetadata(record.topic(), record.partition(), maxBlockTimeMs);
             } catch (KafkaException e) {
@@ -903,8 +903,10 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
 
             //还剩多少时间可以拉取元数据
             long remainingWaitMs = Math.max(0, maxBlockTimeMs - clusterAndWaitTime.waitedOnMetadataMs);
+            //获取到对应的元数据存储在cluster中
             Cluster cluster = clusterAndWaitTime.cluster;
 
+            //第二步，对消息的key和value进行序列化
             byte[] serializedKey;
             try {
                 serializedKey = keySerializer.serialize(record.topic(), record.headers(), record.key());
@@ -922,16 +924,16 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                         " specified in value.serializer", cce);
             }
 
-            //根据分区器选择消息应该发送的分区
+            //第三步，根据分区器选择消息应该发送的分区
             int partition = partition(record, serializedKey, serializedValue, cluster);
 
-            //根据元数据来封装分区对象
+            //第四步，根据元数据来封装分区对象
             tp = new TopicPartition(record.topic(), partition);
 
             setReadOnly(record.headers());
             Header[] headers = record.headers().toArray();
 
-            //判断要发送的消息有没有超过消息大小的最大值
+            //第五步，判断要发送的消息有没有超过消息大小的最大值
             int serializedSize = AbstractRecords.estimateSizeInBytesUpperBound(apiVersions.maxUsableProduceMagic(),
                     compressionType, serializedKey, serializedValue, headers);
             ensureValidRecordSize(serializedSize);
@@ -1004,20 +1006,24 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     private ClusterAndWaitTime waitOnMetadata(String topic, Integer partition, long maxWaitMs) throws InterruptedException {
         // add topic to metadata topic list if it is not there already and reset expiry
         Cluster cluster = metadata.fetch();
-
+        //该Topic未授权
         if (cluster.invalidTopics().contains(topic))
             throw new InvalidTopicException(topic);
 
         metadata.add(topic);
-
+        //根据当前的topic从这个集群的cluster元数据里查看分区的信息
         Integer partitionsCount = cluster.partitionCountForTopic(topic);
         // Return cached metadata if we have it, and if the record's partition is either undefined
         // or within the known partition range
         if (partitionsCount != null && (partition == null || partition < partitionsCount))
             return new ClusterAndWaitTime(cluster, 0);
 
+        //需要去服务端拉取元数据
+        //记录当前时间
         long begin = time.milliseconds();
+        //剩余等待时间
         long remainingWaitMs = maxWaitMs;
+        //已经花了多少时间
         long elapsed;
         // Issue metadata requests until we have metadata for the topic and the requested partition,
         // or until maxWaitTimeMs is exceeded. This is necessary in case the metadata
@@ -1030,8 +1036,10 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             }
             metadata.add(topic);
             int version = metadata.requestUpdate();
+            //唤醒sender线程，开始执行拉取元数据的操作，拉取元数据的操作是由sender线程完成
             sender.wakeup();
             try {
+                //同步等待sender线程拉取元数据
                 metadata.awaitUpdate(version, remainingWaitMs);
             } catch (TimeoutException ex) {
                 // Rethrow with original maxWaitMs to prevent logging exception with remainingWaitMs
@@ -1039,8 +1047,11 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                         String.format("Topic %s not present in metadata after %d ms.",
                                 topic, maxWaitMs));
             }
+            //获取集群的元数据，（上面的可能已经成功更新了元数据信息）
             cluster = metadata.fetch();
+            //计算一下拉取元数据花了多少时间
             elapsed = time.milliseconds() - begin;
+            //如果花的时间大于最大等待时间，那么就报超时
             if (elapsed >= maxWaitMs) {
                 throw new TimeoutException(partitionsCount == null ?
                         String.format("Topic %s not present in metadata after %d ms.",
@@ -1048,14 +1059,18 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                         String.format("Partition %d of topic %s with partition count %d is not present in metadata after %d ms.",
                                 partition, topic, partitionsCount, maxWaitMs));
             }
+            //如果已经获取到了元数据，但是发现topic没有授权
             if (cluster.unauthorizedTopics().contains(topic))
                 throw new TopicAuthorizationException(topic);
             if (cluster.invalidTopics().contains(topic))
                 throw new InvalidTopicException(topic);
+            //还可用时间
             remainingWaitMs = maxWaitMs - elapsed;
+            //如果这个值不为null，说明前面sender线程已经获取到元数据了
             partitionsCount = cluster.partitionCountForTopic(topic);
         } while (partitionsCount == null || (partition != null && partition >= partitionsCount));
 
+        //返回集群的元数据、获取元数据需要的时间
         return new ClusterAndWaitTime(cluster, elapsed);
     }
 

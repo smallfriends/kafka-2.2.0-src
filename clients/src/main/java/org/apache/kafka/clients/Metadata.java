@@ -358,7 +358,6 @@ public class Metadata implements Closeable {
         Set<String> unavailableTopics = metadataResponse.unavailableTopics();
         Cluster clusterForListeners = this.cache.cluster();
         fireListeners(clusterForListeners, unavailableTopics);
-        //是否更新所有topic的元数据
         if (this.needMetadataForAllTopics) {
             // the listener may change the interested topics, which could cause another metadata refresh.
             // If we have already fetched all topics, however, another fetch should be unnecessary.
