@@ -254,20 +254,33 @@ public class Metadata implements Closeable {
      * Wait for metadata update until the current version is larger than the last version we know of
      */
     public synchronized void awaitUpdate(final int lastVersion, final long maxWaitMs) throws InterruptedException {
+
+        //最大等待时间小于0，直接抛异常
         if (maxWaitMs < 0)
             throw new IllegalArgumentException("Max time to wait for metadata updates should not be < 0 milliseconds");
 
         long begin = System.currentTimeMillis();
+
+        //剩余可以使用的时间，一开始是最大等待时间
         long remainingWaitMs = maxWaitMs;
+
+        //如果版本号小于等于上一次的version，说明元数据没有更新成功
         while ((this.version <= lastVersion) && !isClosed()) {
             AuthenticationException ex = getAndClearAuthenticationException();
             if (ex != null)
                 throw ex;
             if (remainingWaitMs != 0)
+                //让当前线程阻塞等待
                 wait(remainingWaitMs);
+
+            //如果代码执行到这，说明要么就被唤醒了，要么就到时间了
             long elapsed = System.currentTimeMillis() - begin;
+
+            //超时了
             if (elapsed >= maxWaitMs)
                 throw new TimeoutException("Failed to update metadata after " + maxWaitMs + " ms.");
+
+            //没有超时，计算剩余时间
             remainingWaitMs = maxWaitMs - elapsed;
         }
         if (isClosed())
