@@ -435,12 +435,19 @@ public class NetworkClient implements KafkaClient {
 
     private void sendInternalMetadataRequest(MetadataRequest.Builder builder,
                                              String nodeConnectionId, long now) {
+
+        //构建一个拉取元数据的请求
         ClientRequest clientRequest = newClientRequest(nodeConnectionId, builder, now, true);
+
+        //发送获取元数据信息的请求
+        //内部中的代码是怎么发送的?我们在分析kafka网络知识的时候解决
         doSend(clientRequest, true, now);
     }
 
     private void doSend(ClientRequest clientRequest, boolean isInternalRequest, long now) {
         ensureActive();
+
+        //取得请求发送目的地的nodeId
         String nodeId = clientRequest.destination();
         if (!isInternalRequest) {
             // If this request came from outside the NetworkClient, validate
@@ -470,6 +477,7 @@ public class NetworkClient implements KafkaClient {
             }
             // The call to build may also throw UnsupportedVersionException, if there are essential
             // fields that cannot be represented in the chosen version.
+            //核心方法
             doSend(clientRequest, isInternalRequest, now, builder.build(version));
         } catch (UnsupportedVersionException unsupportedVersionException) {
             // If the version is not supported, skip sending the request over the wire.
@@ -484,8 +492,14 @@ public class NetworkClient implements KafkaClient {
     }
 
     private void doSend(ClientRequest clientRequest, boolean isInternalRequest, long now, AbstractRequest request) {
+
+        //获取目标节点nodeId
         String destination = clientRequest.destination();
+
+        //构建请求头信息
         RequestHeader header = clientRequest.makeHeader(request.version());
+
+        //日志信息打印
         if (log.isDebugEnabled()) {
             int latestClientVersion = clientRequest.apiKey().latestVersion();
             if (header.apiVersion() == latestClientVersion) {
@@ -496,7 +510,11 @@ public class NetworkClient implements KafkaClient {
                         header.apiVersion(), clientRequest.apiKey(), request, clientRequest.correlationId(), destination);
             }
         }
+
+        //封装Send对象，这个Send对象封装了目的地和header生成的ByteBuffer对象
         Send send = request.toSend(destination, header);
+
+        //基于clientRequest构建InFlightRequest对象
         InFlightRequest inFlightRequest = new InFlightRequest(
                 clientRequest,
                 header,
@@ -504,7 +522,11 @@ public class NetworkClient implements KafkaClient {
                 request,
                 send,
                 now);
+
+        //添加请求到inFlightRequest中
         this.inFlightRequests.add(inFlightRequest);
+
+        //把send请求加入队列等待随后的poll方法把它发送出去
         selector.send(send);
     }
 
@@ -530,8 +552,11 @@ public class NetworkClient implements KafkaClient {
             return responses;
         }
 
+        //1、封装了一个要拉取元数据的请求，目前还没有把请求发送出去，客户端缓存了这些请求
         long metadataTimeout = metadataUpdater.maybeUpdate(now);
         try {
+
+            //2、发送请求、进行复杂的网络操作
             this.selector.poll(Utils.min(timeout, metadataTimeout, defaultRequestTimeoutMs));
         } catch (IOException e) {
             log.error("Unexpected error during I/O", e);
@@ -973,6 +998,7 @@ public class NetworkClient implements KafkaClient {
                 return reconnectBackoffMs;
             }
 
+            //这里会封装请求
             return maybeUpdate(now, node);
         }
 
@@ -1058,19 +1084,25 @@ public class NetworkClient implements KafkaClient {
          * Add a metadata request to the list of sends if we can make one
          */
         private long maybeUpdate(long now, Node node) {
+
+            //获取目标主机
             String nodeConnectionId = node.idString();
 
+            //判断网络连接是否建好了
             if (canSendRequest(nodeConnectionId, now)) {
                 this.metadataFetchInProgress = true;
                 MetadataRequest.Builder metadataRequest;
                 if (metadata.needMetadataForAllTopics())
                     metadataRequest = MetadataRequest.Builder.allTopics();
                 else
+
+                    //拉取我么发送消息的topic方法
                     metadataRequest = new MetadataRequest.Builder(new ArrayList<>(metadata.topics()),
                             metadata.allowAutoTopicCreation());
 
 
                 log.debug("Sending metadata request {} to node {}", metadataRequest, node);
+                //创建了一个拉取元数据的请求
                 sendInternalMetadataRequest(metadataRequest, nodeConnectionId, now);
                 return defaultRequestTimeoutMs;
             }

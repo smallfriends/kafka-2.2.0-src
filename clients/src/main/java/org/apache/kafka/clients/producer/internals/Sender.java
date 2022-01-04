@@ -275,6 +275,7 @@ public class Sender implements Runnable {
     void run(long now) {
         if (transactionManager != null) {
             try {
+                //生产者事务管理相关处理，本章节不做具体分析
                 if (transactionManager.shouldResetProducerStateAfterResolvingSequences())
                     // Check if the previous run expired batches which requires a reset of the producer state.
                     transactionManager.resetProducerId();
@@ -309,11 +310,16 @@ public class Sender implements Runnable {
             }
         }
 
+        //准备发送的数据请求，把客户端的请求进行缓存
         long pollTimeout = sendProducerData(now);
+
+        //把准备好的消息请求真正发送出去
         client.poll(pollTimeout, now);
     }
 
     private long sendProducerData(long now) {
+
+        //步骤一：获取元数据
         Cluster cluster = metadata.fetch();
         // get the list of partitions with data ready to send
         RecordAccumulator.ReadyCheckResult result = this.accumulator.ready(cluster, now);
@@ -390,6 +396,8 @@ public class Sender implements Runnable {
             // otherwise the select time will be the time difference between now and the metadata expiry time;
             pollTimeout = 0;
         }
+
+        //将待发送的ProducerBatch封装成为ClientRequest
         sendProduceRequests(batches, now);
         return pollTimeout;
     }

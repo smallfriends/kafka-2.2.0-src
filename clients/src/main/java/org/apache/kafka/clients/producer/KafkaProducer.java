@@ -443,12 +443,15 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                 this.metadata.bootstrap(addresses, time.milliseconds());
             }
             this.errors = this.metrics.sensor("errors");
+
             //初始化Sender线程，包含了业务代码
             this.sender = newSender(logContext, kafkaClient, this.metadata);
             String ioThreadName = NETWORK_THREAD_PREFIX + " | " + clientId;
+
             //线程带代码
             //把业务代码与线程代码进行隔离，这样会显得清晰
             this.ioThread = new KafkaThread(ioThreadName, this.sender, true);
+
             //启动线程
             this.ioThread.start();
             config.logUnused();
