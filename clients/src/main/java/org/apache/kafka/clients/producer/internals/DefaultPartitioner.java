@@ -52,12 +52,20 @@ public class DefaultPartitioner implements Partitioner {
      * @param cluster The current cluster metadata
      */
     public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
+
+        //首先获取我们要发送消息对应的topic的分区消息
         List<PartitionInfo> partitions = cluster.partitionsForTopic(topic);
         int numPartitions = partitions.size();
+
+        //策略一：发送消息的时候，没有指定key
         if (keyBytes == null) {
+            //定义一个计数器，每次执行实现加1的操作
             int nextValue = nextValue(topic);
+            //获取可用的分区信息
             List<PartitionInfo> availablePartitions = cluster.availablePartitionsForTopic(topic);
             if (availablePartitions.size() > 0) {
+
+                //一个自增的数对分区总数取模，来达到轮询的效果，达到负载均衡
                 int part = Utils.toPositive(nextValue) % availablePartitions.size();
                 return availablePartitions.get(part).partition();
             } else {
@@ -66,6 +74,7 @@ public class DefaultPartitioner implements Partitioner {
             }
         } else {
             // hash the keyBytes to choose a partition
+            //策略二：指定key
             return Utils.toPositive(Utils.murmur2(keyBytes)) % numPartitions;
         }
     }
@@ -79,6 +88,7 @@ public class DefaultPartitioner implements Partitioner {
                 counter = currentCounter;
             }
         }
+        //自增1
         return counter.getAndIncrement();
     }
 

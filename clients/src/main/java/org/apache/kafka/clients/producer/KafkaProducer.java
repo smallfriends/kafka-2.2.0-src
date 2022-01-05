@@ -1293,9 +1293,12 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * calls configured partitioner class to compute the partition.
      */
     private int partition(ProducerRecord<K, V> record, byte[] serializedKey, byte[] serializedValue, Cluster cluster) {
+
+        //如果发送消息的过程中，指定了分区编号，直接获取该分区编号
         Integer partition = record.partition();
         return partition != null ?
                 partition :
+                //使用分区器进行分区
                 partitioner.partition(
                         record.topic(), record.key(), serializedKey, record.value(), serializedValue, cluster);
     }
