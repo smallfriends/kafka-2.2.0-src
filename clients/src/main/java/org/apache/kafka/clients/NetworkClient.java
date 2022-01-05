@@ -566,6 +566,10 @@ public class NetworkClient implements KafkaClient {
         long updatedNow = this.time.milliseconds();
         List<ClientResponse> responses = new ArrayList<>();
         handleCompletedSends(responses, updatedNow);
+
+        //3、处理响应，响应里面就会有我们需要的元数据
+
+        //处理接收到的响应responses
         handleCompletedReceives(responses, updatedNow);
         handleDisconnections(responses, updatedNow);
         handleConnections();
@@ -829,21 +833,31 @@ public class NetworkClient implements KafkaClient {
      * @param responses The list of responses to update
      * @param now The current time
      */
+    //获取服务端的响应，然后按照响应分类处理
     private void handleCompletedReceives(List<ClientResponse> responses, long now) {
         for (NetworkReceive receive : this.selector.completedReceives()) {
+
+            //获取响应的节点ip
             String source = receive.source();
+            //从inFlightRequests中获取缓存的request对象
             InFlightRequest req = inFlightRequests.completeNext(source);
+            //解析响应信息，验证响应头，生成Struct对象
             Struct responseStruct = parseStructMaybeUpdateThrottleTimeMetrics(receive.payload(), req.header,
                 throttleTimeSensor, now);
+            //打印日志
             if (log.isTraceEnabled()) {
                 log.trace("Completed receive from node {} for {} with correlation id {}, received {}", req.destination,
                     req.header.apiKey(), req.header.correlationId(), responseStruct);
             }
             // If the received response includes a throttle delay, throttle the connection.
+            //生成响应体
             AbstractResponse body = AbstractResponse.
                     parseResponse(req.header.apiKey(), responseStruct, req.header.apiVersion());
             maybeThrottle(body, req.header.apiVersion(), req.destination, now);
+
+            //如果是元数据请求的响应
             if (req.isInternalRequest && body instanceof MetadataResponse)
+                //处理metadata的更新响应信息
                 metadataUpdater.handleCompletedMetadataResponse(req.header, now, (MetadataResponse) body);
             else if (req.isInternalRequest && body instanceof ApiVersionsResponse)
                 handleApiVersionsResponse(responses, req, now, (ApiVersionsResponse) body);
@@ -1050,6 +1064,7 @@ public class NetworkClient implements KafkaClient {
 
             // don't update the cluster if there are no valid nodes...the topic we want may still be in the process of being
             // created which means we will get errors and no nodes until it exists
+            //判断集群的元数据信息是否存在
             if (response.brokers().isEmpty()) {
                 log.trace("Ignoring empty metadata response with correlation id {}.", requestHeader.correlationId());
                 this.metadata.failedUpdate(now, null);

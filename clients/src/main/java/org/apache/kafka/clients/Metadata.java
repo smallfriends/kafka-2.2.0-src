@@ -349,10 +349,16 @@ public class Metadata implements Closeable {
         this.needUpdate = false;
         this.lastRefreshMs = now;
         this.lastSuccessfulRefreshMs = now;
+
+        //更新元数据的版本
         this.version += 1;
 
+        //topicExpiryEnabled默认值是true
         if (topicExpiryEnabled) {
             // Handle expiry of topics from the metadata refresh set.
+
+            //第一次进来的topics为空，下面代码不会运行
+            //第二次进来，通过Producer的sender方法进来，这个时候已经有topic元数据信息
             for (Iterator<Map.Entry<String, Long>> it = topics.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, Long> entry = it.next();
                 long expireMs = entry.getValue();
@@ -371,6 +377,8 @@ public class Metadata implements Closeable {
         Set<String> unavailableTopics = metadataResponse.unavailableTopics();
         Cluster clusterForListeners = this.cache.cluster();
         fireListeners(clusterForListeners, unavailableTopics);
+
+        //这个值默认为false，代码不会进入到该分支中
         if (this.needMetadataForAllTopics) {
             // the listener may change the interested topics, which could cause another metadata refresh.
             // If we have already fetched all topics, however, another fetch should be unnecessary.
@@ -384,6 +392,7 @@ public class Metadata implements Closeable {
         }
         clusterResourceListeners.onUpdate(clusterForListeners.clusterResource());
 
+        //唤醒上一讲中sender线程处于wait的线程，metadata.awaitUpdate(version,remainingWaitMs)
         notifyAll();
         log.debug("Updated cluster metadata version {} to {}", this.version, this.cache);
     }
