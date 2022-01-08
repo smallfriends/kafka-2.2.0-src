@@ -78,6 +78,7 @@ public final class RecordAccumulator {
     private final BufferPool free;
     private final Time time;
     private final ApiVersions apiVersions;
+    //TopicPartition分区，Deque<ProducerBatch>队列
     private final ConcurrentMap<TopicPartition, Deque<ProducerBatch>> batches;
     private final IncompleteBatches incomplete;
     // The following variables are only accessed by the sender thread, so we don't need to protect them.
@@ -125,7 +126,7 @@ public final class RecordAccumulator {
         this.lingerMs = lingerMs;
         this.retryBackoffMs = retryBackoffMs;
         this.deliveryTimeoutMs = deliveryTimeoutMs;
-        this.batches = new CopyOnWriteMap<>();
+        this.batches = new CopyOnWriteMap<>();      //java JUC CopyOnWriteArrayList
         this.free = bufferPool;
         this.incomplete = new IncompleteBatches();
         this.muted = new HashMap<>();
@@ -194,25 +195,38 @@ public final class RecordAccumulator {
         if (headers == null) headers = Record.EMPTY_HEADERS;
         try {
             // check if we have an in-progress batch
+            //步骤一：根据分区获取消息所属的队列中
             Deque<ProducerBatch> dq = getOrCreateDeque(tp);
+
+            //加锁
+            //假设有3个线程进来了，都是需要把数据写往同一个分区的相同队列中
             synchronized (dq) {
+                //线程1先获取锁
                 if (closed)
                     throw new KafkaException("Producer closed while send in progress");
+
+                //步骤二：尝试向队列里面的batch中添加数据
                 RecordAppendResult appendResult = tryAppend(timestamp, key, value, headers, callback, dq);
                 if (appendResult != null)
                     return appendResult;
-            }
+            }   //线程1释放锁
 
             // we don't have an in-progress record batch try to allocate a new batch
             byte maxUsableMagic = apiVersions.maxUsableProduceMagic();
+
+            //步骤三：计算一个batch的大小
             int size = Math.max(this.batchSize, AbstractRecords.estimateSizeInBytesUpperBound(maxUsableMagic, compression, key, value, headers));
             log.trace("Allocating a new {} byte message buffer for topic {} partition {}", size, tp.topic(), tp.partition());
-            buffer = free.allocate(size, maxTimeToBlock);
+
+            //步骤四：根据批次大小分配内存
+            buffer = free.allocate(size, maxTimeToBlock);   //内存池的设计
             synchronized (dq) {
                 // Need to check if producer is closed again after grabbing the dequeue lock.
+                //线程1获取锁
                 if (closed)
                     throw new KafkaException("Producer closed while send in progress");
 
+                //步骤五：再次尝试把数据写入到批次中
                 RecordAppendResult appendResult = tryAppend(timestamp, key, value, headers, callback, dq);
                 if (appendResult != null) {
                     // Somebody else found us a batch, return the one we waited for! Hopefully this doesn't happen often...
@@ -220,9 +234,13 @@ public final class RecordAccumulator {
                 }
 
                 MemoryRecordsBuilder recordsBuilder = recordsBuilder(buffer, maxUsableMagic);
+
+                //步骤六：根据内存大小封装批次
                 ProducerBatch batch = new ProducerBatch(tp, recordsBuilder, time.milliseconds());
+                //尝试往这个批次写数据，到这个时候，代码会执行成功
                 FutureRecordMetadata future = Utils.notNull(batch.tryAppend(timestamp, key, value, headers, callback, time.milliseconds()));
 
+                //步骤七：把这个批次放入到这个队列尾部
                 dq.addLast(batch);
                 incomplete.add(batch);
 
@@ -232,7 +250,7 @@ public final class RecordAccumulator {
             }
         } finally {
             if (buffer != null)
-                free.deallocate(buffer);
+                free.deallocate(buffer);    //把内存归还给内存池
             appendsInProgress.decrementAndGet();
         }
     }
@@ -255,7 +273,9 @@ public final class RecordAccumulator {
      */
     private RecordAppendResult tryAppend(long timestamp, byte[] key, byte[] value, Header[] headers,
                                          Callback callback, Deque<ProducerBatch> deque) {
+        //获取队列中最后一个批次
         ProducerBatch last = deque.peekLast();
+        //第一次进来是没有批次的，if不会执行，直接返回null
         if (last != null) {
             FutureRecordMetadata future = last.tryAppend(timestamp, key, value, headers, callback, time.milliseconds());
             if (future == null)
@@ -263,6 +283,7 @@ public final class RecordAccumulator {
             else
                 return new RecordAppendResult(future, deque.size() > 1 || last.isFull(), false);
         }
+        //第一次直接返回null
         return null;
     }
 
@@ -627,11 +648,16 @@ public final class RecordAccumulator {
      * Get the deque for the given topic-partition, creating it if necessary.
      */
     private Deque<ProducerBatch> getOrCreateDeque(TopicPartition tp) {
+
+        //直接从batchs里面获取当前分区对应的存储队列
         Deque<ProducerBatch> d = this.batches.get(tp);
         if (d != null)
             return d;
+        //创建出一个新的空队列
         d = new ArrayDeque<>();
+        //putIfAbsent方法如果有就覆盖，如果没有就返回null
         Deque<ProducerBatch> previous = this.batches.putIfAbsent(tp, d);
+        //为null，说明第一次加入map，返回队列d
         if (previous == null)
             return d;
         else

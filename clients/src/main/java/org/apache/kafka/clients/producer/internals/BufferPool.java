@@ -96,6 +96,7 @@ public class BufferPool {
      *         forever)
      */
     public ByteBuffer allocate(int size, long maxTimeToBlockMs) throws InterruptedException {
+        //如果要申请的内存大小超过了32M就报异常
         if (size > this.totalMemory)
             throw new IllegalArgumentException("Attempt to allocate " + size
                                                + " bytes, but there is a hard limit of "
@@ -103,22 +104,30 @@ public class BufferPool {
                                                + " on memory allocations.");
 
         ByteBuffer buffer = null;
+        //加锁
         this.lock.lock();
         try {
             // check if we have a free buffer of the right size pooled
+            //poolableSize就是一个批次的大小，默认就是16kb
+            //代码第一次进来的话，内存池中是没有内存的，这里是获取不到
             if (size == poolableSize && !this.free.isEmpty())
+                //直接从内存池中拿出一块内存就可以了
                 return this.free.pollFirst();
 
             // now check if the request is immediately satisfiable with the
             // memory on hand or if we need to block
+            //内存池的内存大小=内存块的个数*批次的大小
             int freeListSize = freeSize() * this.poolableSize;
             if (this.nonPooledAvailableMemory + freeListSize >= size) {
                 // we have enough unallocated or pooled memory to immediately
                 // satisfy the request, but need to allocate the buffer
+                //设计巧妙的方法
                 freeUp(size);
+                //进行内存的扣减
                 this.nonPooledAvailableMemory -= size;
             } else {
                 // we are out of memory and will have to block
+                //还有一种情况，比如内存池中还剩10K的内存，但是需要申请32K的内存
                 int accumulated = 0;
                 Condition moreMemory = this.lock.newCondition();
                 try {
@@ -146,6 +155,7 @@ public class BufferPool {
 
                         // check if we can satisfy this request from the free list,
                         // otherwise allocate memory
+                        //再次尝试看看内存池中是否有内存了，如果有，并且你申请的内存大小就是一个批次的大小
                         if (accumulated == 0 && size == this.poolableSize && !this.free.isEmpty()) {
                             // just grab a buffer from the free list
                             buffer = this.free.pollFirst();
@@ -153,6 +163,7 @@ public class BufferPool {
                         } else {
                             // we'll need to allocate memory, but we may only get
                             // part of what we need on this iteration
+                            //走到这里说明申请的大小要大于pollableSize，或者free为空·
                             freeUp(size - accumulated);
                             int got = (int) Math.min(size - accumulated, this.nonPooledAvailableMemory);
                             this.nonPooledAvailableMemory -= got;
@@ -171,6 +182,7 @@ public class BufferPool {
             // signal any additional waiters if there is more memory left
             // over for them
             try {
+                //通知其他waiters去拿内存
                 if (!(this.nonPooledAvailableMemory == 0 && this.free.isEmpty()) && !this.waiters.isEmpty())
                     this.waiters.peekFirst().signal();
             } finally {
@@ -237,16 +249,23 @@ public class BufferPool {
      *             since the buffer may re-allocate itself during in-place compression
      */
     public void deallocate(ByteBuffer buffer, int size) {
+        //加锁
         lock.lock();
         try {
+            //需要申请的内存等于一个批次的内存大小，就把内存归还给内存池
             if (size == this.poolableSize && size == buffer.capacity()) {
+                //清空数据
                 buffer.clear();
+                //内存放入内存池中
                 this.free.add(buffer);
             } else {
+                //否则不相等，就直接归还给非内存池中的可用内存
                 this.nonPooledAvailableMemory += size;
             }
+            //获取并处理，等待在Condition上申请内存的线程（peek 等待时间最久的线程）
             Condition moreMem = this.waiters.peekFirst();
             if (moreMem != null)
+                //内存释放后，需要唤醒处于wait等待内存的线程——>!moreMemory.await(remainingTimeToBlockNs, TimeUnit.NANOSECONDS)
                 moreMem.signal();
         } finally {
             lock.unlock();

@@ -28,6 +28,8 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class CopyOnWriteMap<K, V> implements ConcurrentMap<K, V> {
 
+    //核心变量就是一个map
+    //volatile关键字，在多线程的情况下，这个map的值发生变化，其他线程是可见的
     private volatile Map<K, V> map;
 
     public CopyOnWriteMap() {
@@ -53,6 +55,7 @@ public class CopyOnWriteMap<K, V> implements ConcurrentMap<K, V> {
         return map.entrySet();
     }
 
+    //get方法没有加锁，读取数据的时候性能很高（高并发场景下，性能肯定很好）
     @Override
     public V get(Object k) {
         return map.get(k);
@@ -85,8 +88,11 @@ public class CopyOnWriteMap<K, V> implements ConcurrentMap<K, V> {
 
     @Override
     public synchronized V put(K k, V v) {
+        //开辟新的内存空间
         Map<K, V> copy = new HashMap<K, V>(this.map);
+        //插入数据
         V prev = copy.put(k, v);
+        //复制给map
         this.map = Collections.unmodifiableMap(copy);
         return prev;
     }
@@ -108,9 +114,11 @@ public class CopyOnWriteMap<K, V> implements ConcurrentMap<K, V> {
 
     @Override
     public synchronized V putIfAbsent(K k, V v) {
+        //如果k不存在，就调用内部的put方法
         if (!containsKey(k))
             return put(k, v);
         else
+            //如果存在就返回结果
             return get(k);
     }
 

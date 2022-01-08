@@ -939,18 +939,21 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             //第五步，判断要发送的消息有没有超过消息大小的最大值
             int serializedSize = AbstractRecords.estimateSizeInBytesUpperBound(apiVersions.maxUsableProduceMagic(),
                     compressionType, serializedKey, serializedValue, headers);
+
+            //校验消息的大小
             ensureValidRecordSize(serializedSize);
             long timestamp = record.timestamp() == null ? time.milliseconds() : record.timestamp();
             log.trace("Sending record {} with callback {} to topic {} partition {}", record, callback, record.topic(), partition);
 
             // producer callback will make sure to call both 'callback' and interceptor callback
-            //给每一条消息绑定它的回调函数，因为我们使用的是异步发送的消息
+
+            //第六步，给每一条消息绑定它的回调函数，因为我们使用的是异步发送的消息
             Callback interceptCallback = new InterceptorCallback<>(callback, this.interceptors, tp);
 
             if (transactionManager != null && transactionManager.isTransactional())
                 transactionManager.maybeAddPartitionToTransaction(tp);
 
-            //把消息放入Accumulator（32M的一个内存）
+            //第七步，把消息放入Accumulator（32M的一个内存）
             RecordAccumulator.RecordAppendResult result = accumulator.append(tp, timestamp, serializedKey,
                     serializedValue, headers, interceptCallback, remainingWaitMs);
 
@@ -1081,6 +1084,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * Validate that the record size isn't too large
      */
     private void ensureValidRecordSize(int size) {
+
         //maxRequestSize=1M(默认)
         if (size > this.maxRequestSize)
             //kafka自定义的异常
@@ -1088,7 +1092,8 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     " bytes when serialized which is larger than the maximum request size you have configured with the " +
                     ProducerConfig.MAX_REQUEST_SIZE_CONFIG +
                     " configuration.");
-        //totalMemorySize=32M
+
+        //totalMemorySize=32M，缓冲区的大小
         if (size > this.totalMemorySize)
             throw new RecordTooLargeException("The message is " + size +
                     " bytes when serialized which is larger than the total memory buffer you have configured with the " +
