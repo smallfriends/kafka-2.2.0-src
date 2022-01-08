@@ -314,6 +314,7 @@ public class Sender implements Runnable {
         long pollTimeout = sendProducerData(now);
 
         //把准备好的消息请求真正发送出去
+        //实现数据请求发送出去，并且会接受服务端响应，对响应数据进行处理
         client.poll(pollTimeout, now);
     }
 
@@ -321,10 +322,14 @@ public class Sender implements Runnable {
 
         //步骤一：获取元数据
         Cluster cluster = metadata.fetch();
+
         // get the list of partitions with data ready to send
+        //步骤二：判断哪些partition有消息可以发送，获取到这个partition的leader partition对应的broker主机相关信息
+        //目前消息已经封装在不同分区队列中的批次中，判断哪些批次可以把数据发送出去
         RecordAccumulator.ReadyCheckResult result = this.accumulator.ready(cluster, now);
 
         // if there are any partitions whose leaders are not known yet, force metadata update
+        //步骤三：如果有写partition没有leader信息，更新metadata
         if (!result.unknownLeaderTopics.isEmpty()) {
             // The set of topics with unknown leader contains topics with leader election pending as well as
             // topics which may have expired. Add the topic again to metadata to ensure it is included
@@ -338,29 +343,46 @@ public class Sender implements Runnable {
         }
 
         // remove any nodes we aren't ready to send to
+        //遍历所有获取的网络节点，基于网络连接状态检测这些节点是否可用，如果不可用就剔除
         Iterator<Node> iter = result.readyNodes.iterator();
         long notReadyTimeout = Long.MAX_VALUE;
         while (iter.hasNext()) {
             Node node = iter.next();
+
+            //步骤四：检查与要发送数据的主机网络是否建立好，去掉那些不能发送信息的节点
             if (!this.client.ready(node, now)) {
+
+                //如果网络没有建立好，这里返回的就是false，!false就可以进来了
+                //移除这些主机
                 iter.remove();
                 notReadyTimeout = Math.min(notReadyTimeout, this.client.pollDelayMs(node, now));
             }
         }
 
-        // create produce requests
+        /**
+         * 步骤五：
+         *    有可能要发送的partition有很多个，这些partition的leader分区可能在同一台节点上
+         *    安装brokerId进行分区，同一个broker的partition为同一组
+         */
+        //create produce requests
+        //获取要发送的records，如果网络没有建立好，这块代码也是不会执行的
+        //Map<brokerId，数据>，减少网络请求
         Map<Integer, List<ProducerBatch>> batches = this.accumulator.drain(cluster, result.readyNodes, this.maxRequestSize, now);
         addToInflightBatches(batches);
+        //保证顺序发送，也就是该参数 max.in.flight.requests.per.connection=1
         if (guaranteeMessageOrder) {
             // Mute all the partitions drained
+            //如果网络没有建立好，batches为空，这块代码也不会执行
             for (List<ProducerBatch> batchList : batches.values()) {
                 for (ProducerBatch batch : batchList)
                     this.accumulator.mutePartition(batch.topicPartition);
             }
         }
 
+        //步骤六：放弃超时的batches
         accumulator.resetNextBatchExpiryTime();
         List<ProducerBatch> expiredInflightBatches = getExpiredInflightBatches(now);
+        //超时批次的处理逻辑
         List<ProducerBatch> expiredBatches = this.accumulator.expiredBatches(now);
         expiredBatches.addAll(expiredInflightBatches);
 
@@ -747,13 +769,18 @@ public class Sender implements Runnable {
      * Transfer the record batches into a list of produce requests on a per-node basis
      */
     private void sendProduceRequests(Map<Integer, List<ProducerBatch>> collated, long now) {
+
+        //遍历每一个分区对应的批次数据
         for (Map.Entry<Integer, List<ProducerBatch>> entry : collated.entrySet())
+            //封装请求
             sendProduceRequest(now, entry.getKey(), acks, requestTimeoutMs, entry.getValue());
     }
 
     /**
      * Create a produce request from the given record batches
      */
+    //将待发送的ProducerBatch封装成为ClientRequest，然后发送出去
+    //注意这里的发送其实只是加入发送的队列，等待NetWorkClient进行poll操作时，才发生网络IO
     private void sendProduceRequest(long now, int destination, short acks, int timeout, List<ProducerBatch> batches) {
         if (batches.isEmpty())
             return;

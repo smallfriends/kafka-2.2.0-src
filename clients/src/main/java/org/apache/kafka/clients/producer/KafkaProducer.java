@@ -466,6 +466,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     }
 
     // visible for testing
+    //构建一个Sender线程
     Sender newSender(LogContext logContext, KafkaClient kafkaClient, Metadata metadata) {
         int maxInflightRequests = configureInflightRequests(producerConfig, transactionManager != null);
         int requestTimeoutMs = producerConfig.getInt(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG);
