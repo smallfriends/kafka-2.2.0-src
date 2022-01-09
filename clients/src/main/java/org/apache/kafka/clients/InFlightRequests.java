@@ -96,10 +96,13 @@ final class InFlightRequests {
      *
      * @param node Node in question
      * @return true iff we have no requests still being sent to the given node
+     * 判断该连接是否能够发送请求出去
      */
     public boolean canSendMore(String node) {
         Deque<NetworkClient.InFlightRequest> queue = requests.get(node);
         return queue == null || queue.isEmpty() ||
+
+                //必须等待前面的请求发送完毕，并且没有响应的请求数目小于指定数目
                (queue.peekFirst().send.completed() && queue.size() < this.maxInFlightRequestsPerConnection);
     }
 

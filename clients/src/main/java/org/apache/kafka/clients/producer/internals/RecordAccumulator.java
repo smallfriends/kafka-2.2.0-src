@@ -461,19 +461,28 @@ public final class RecordAccumulator {
         long nextReadyCheckDelayMs = Long.MAX_VALUE;
         Set<String> unknownLeaderTopics = new HashSet<>();
 
+        //waiters队列里面有数据，说明内存池中的内存不够了
         boolean exhausted = this.free.queued() > 0;
+
+        //遍历所有的分区，一个分区对应一个队列
         for (Map.Entry<TopicPartition, Deque<ProducerBatch>> entry : this.batches.entrySet()) {
+            //获取分区
             TopicPartition part = entry.getKey();
+            //获取分区对应的队列
             Deque<ProducerBatch> deque = entry.getValue();
 
+            //根据分区获取该分区的leader partition对应的主机
             Node leader = cluster.leaderFor(part);
             synchronized (deque) {
+                //如果没有找到对应的主机，进行标识，下一次重新获取该topic的元数据信息
                 if (leader == null && !deque.isEmpty()) {
                     // This is a partition for which leader is not known, but messages are available to send.
                     // Note that entries are currently not removed from batches when deque is empty.
                     unknownLeaderTopics.add(part.topic());
                 } else if (!readyNodes.contains(leader) && !isMuted(part, nowMs)) {
+                    //获取队列中第一个批次
                     ProducerBatch batch = deque.peekFirst();
+                    //批次不为null，判断批次是否可以发送
                     if (batch != null) {
                         long waitedTimeMs = batch.waitedTimeMs(nowMs);
                         boolean backingOff = batch.attempts() > 0 && waitedTimeMs < retryBackoffMs;

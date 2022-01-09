@@ -883,6 +883,7 @@ public class Selector implements Selectable, AutoCloseable {
      */
     @Override
     public boolean isChannelReady(String id) {
+        //检查底层网络缓存中是否有对应的kafkaChannel
         KafkaChannel channel = this.channels.get(id);
         return channel != null && channel.ready();
     }
