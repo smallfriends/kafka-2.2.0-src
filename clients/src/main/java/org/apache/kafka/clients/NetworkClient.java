@@ -958,11 +958,14 @@ public class NetworkClient implements KafkaClient {
      * Initiate a connection to the given node
      */
     private void initiateConnect(Node node, long now) {
+        //获取节点id
         String nodeConnectionId = node.idString();
         try {
+            //更新节点连接状态为连接中CONNECTING
             this.connectionStates.connecting(nodeConnectionId, now, node.host(), clientDnsLookup);
             InetAddress address = this.connectionStates.currentAddress(nodeConnectionId);
             log.debug("Initiating connection to node {} using address {}", node, address);
+            //尝试与节点建立socket网络连接
             selector.connect(nodeConnectionId,
                     new InetSocketAddress(address, node.port()),
                     this.socketSendBuffer,

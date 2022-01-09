@@ -100,12 +100,16 @@ public class Selector implements Selectable, AutoCloseable {
     }
 
     private final Logger log;
+    //该对象就是Java NIO中的Selector，用来监听网络io事件
+    //负责网络的建立、发送网络请求、处理网络io，是kafka网络这一块的核心组件
     private final java.nio.channels.Selector nioSelector;
+    //存储brokerId与KafkaChannel之间的映射关系，KafkaChannel是基于socketChannel进行了封装
     private final Map<String, KafkaChannel> channels;
     private final Set<KafkaChannel> explicitlyMutedChannels;
     private boolean outOfMemory;
     private final List<Send> completedSends;
     private final List<NetworkReceive> completedReceives;
+    //已经接收完成还没处理的响应，一个KafkaChannel对应一个队列，一个队列对应一个连接，一个连接会有很多响应
     private final Map<KafkaChannel, Deque<NetworkReceive>> stagedReceives;
     private final Set<SelectionKey> immediatelyConnectedKeys;
     private final Map<String, KafkaChannel> closingChannels;
@@ -249,17 +253,29 @@ public class Selector implements Selectable, AutoCloseable {
     @Override
     public void connect(String id, InetSocketAddress address, int sendBufferSize, int receiveBufferSize) throws IOException {
         ensureNotRegistered(id);
+
+        /**
+         * 以下代码就是一些java NIO编程的基本代码
+         */
+        //获取到SocketChannel
         SocketChannel socketChannel = SocketChannel.open();
         SelectionKey key = null;
         try {
+            //配置socketChannel相关信息
             configureSocketChannel(socketChannel, sendBufferSize, receiveBufferSize);
+            //尝试与服务器连接，由于设置的是非阻塞模式，这种情况下无论操作是否完成都会立刻返回，
+            //需要通过其他方式来判断具体操作是否成功
             boolean connected = doConnect(socketChannel, address);
+            //socketChannel向nioSelector注册了一个OP_CONNECT连接事件
             key = registerChannel(id, socketChannel, SelectionKey.OP_CONNECT);
 
+            //连接成功
             if (connected) {
                 // OP_CONNECT won't trigger for immediately connected channels
                 log.debug("Immediately connected to node {}", id);
+                //添加key到Set<SelectionKey>集合中
                 immediatelyConnectedKeys.add(key);
+                //取消前面注册OP_CONNECT事件
                 key.interestOps(0);
             }
         } catch (IOException | RuntimeException e) {
@@ -283,13 +299,19 @@ public class Selector implements Selectable, AutoCloseable {
 
     private void configureSocketChannel(SocketChannel socketChannel, int sendBufferSize, int receiveBufferSize)
             throws IOException {
+        //设置为非阻塞模式
         socketChannel.configureBlocking(false);
+        //获取socket
         Socket socket = socketChannel.socket();
+        //定期检查一下两边的连接是不断的
         socket.setKeepAlive(true);
         if (sendBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE)
+            //设置socket发送数据的缓存大小
             socket.setSendBufferSize(sendBufferSize);
         if (receiveBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE)
+            //设置socket接收数据的缓存大小
             socket.setReceiveBufferSize(receiveBufferSize);
+        //是否启用nagle算法，默认值false(启用)
         socket.setTcpNoDelay(true);
     }
 
@@ -321,7 +343,11 @@ public class Selector implements Selectable, AutoCloseable {
     }
 
     protected SelectionKey registerChannel(String id, SocketChannel socketChannel, int interestedOps) throws IOException {
+
+        //socketChannel向nioSelector注册了一个OP_CONNECT连接事件
         SelectionKey key = socketChannel.register(nioSelector, interestedOps);
+
+        //通过这个socketChannel构建出KafkaChannel
         KafkaChannel channel = buildAndAttachKafkaChannel(socketChannel, id, key);
         this.channels.put(id, channel);
         if (idleExpiryManager != null)
@@ -331,7 +357,9 @@ public class Selector implements Selectable, AutoCloseable {
 
     private KafkaChannel buildAndAttachKafkaChannel(SocketChannel socketChannel, String id, SelectionKey key) throws IOException {
         try {
+            //构建KafkaChannel
             KafkaChannel channel = channelBuilder.buildChannel(id, key, maxReceiveSize, memoryPool);
+            //将key与KafkaChannel关联，方便通过key得到KafkaChannel，以及通过KafkaChannel获取到key
             key.attach(channel);
             return channel;
         } catch (Exception e) {
@@ -517,6 +545,8 @@ public class Selector implements Selectable, AutoCloseable {
             try {
                 /* complete any connections that have finished their handshake (either normally or immediately) */
                 if (isImmediatelyConnected || key.isConnectable()) {
+                    //核心处理逻辑
+                    //如果之前都没有完成网络连接，这里会去完成最后的网络连接
                     if (channel.finishConnect()) {
                         this.connected.add(channel.id());
                         this.sensors.connectionCreated.record();
