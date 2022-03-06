@@ -330,11 +330,12 @@ class RequestChannel(val queueSize: Int, val metricNamePrefix : String) extends 
       }
       trace(message)
     }
-
+    //获取对应的Processor线程
     val processor = processors.get(response.processor)
     // The processor may be null if it was shutdown. In this case, the connections
     // are closed, so the response is dropped.
     if (processor != null) {
+      //添加响应到Processor线程对应的队列中
       processor.enqueueResponse(response)
     }
   }

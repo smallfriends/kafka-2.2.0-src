@@ -55,7 +55,9 @@ object Kafka extends Logging {
 
   def main(args: Array[String]): Unit = {
     try {
+      //解析启动服务的时候传递的参数
       val serverProps = getPropsFromArgs(args)
+      //创建KafkaServerStartable对象内部初始化kafkaServer对象
       val kafkaServerStartable = KafkaServerStartable.fromProps(serverProps)
 
       try {
@@ -72,6 +74,7 @@ object Kafka extends Logging {
         override def run(): Unit = kafkaServerStartable.shutdown()
       })
 
+      //启动KafkaServer服务
       kafkaServerStartable.startup()
       kafkaServerStartable.awaitShutdown()
     }

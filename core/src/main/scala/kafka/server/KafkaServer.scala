@@ -188,6 +188,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
    * Instantiates the LogManager, the SocketServer and the request handlers - KafkaRequestHandlers
    */
   def startup() {
+    //服整个kafka服务端的功能都在这里
     try {
       info("starting")
 
@@ -249,6 +250,8 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         // Create and start the socket server acceptor threads so that the bound port is known.
         // Delay starting processors until the end of the initialization sequence to ensure
         // that credentials have been loaded before processing authentications.
+
+        //NIO服务端，SocketServer是接收客户端Socket请求连接、处理请求并返回处理结果的核心类
         socketServer = new SocketServer(config, metrics, time, credentialProvider)
         socketServer.startup(startupProcessors = false)
 
@@ -298,6 +301,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
           kafkaController, zkClient, config.brokerId, config, metadataCache, metrics, authorizer, quotaManagers,
           fetchManager, brokerTopicStats, clusterId, time, tokenManager)
 
+        //就是它实现处理队列中的请求—— 它是一个线程池
         dataPlaneRequestHandlerPool = new KafkaRequestHandlerPool(config.brokerId, socketServer.dataPlaneRequestChannel, dataPlaneRequestProcessor, time,
           config.numIoThreads, s"${SocketServer.DataPlaneMetricPrefix}RequestHandlerAvgIdlePercent", SocketServer.DataPlaneThreadPrefix)
 

@@ -110,6 +110,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
   def startup(startupProcessors: Boolean = true) {
     this.synchronized {
       connectionQuotas = new ConnectionQuotas(config.maxConnectionsPerIp, config.maxConnectionsPerIpOverrides)
+      //创建Acceptor和Processor线程
       createControlPlaneAcceptorAndProcessor(config.controlPlaneListener)
       createDataPlaneAcceptorsAndProcessors(config.numNetworkThreads, config.dataPlaneListeners)
       if (startupProcessors) {
@@ -719,16 +720,23 @@ private[kafka] class Processor(val id: Int,
   private var nextConnectionIndex = 0
 
   override def run() {
+
+    //等待Processor线程启动完成
     startupComplete()
     try {
       while (isRunning) {
         try {
           // setup any new connections that have been queued up
+          // 读取每一个SocketChannel,然后向Selector上注册OP_READ事件
           configureNewConnections()
           // register any new responses for writing
+          //注册一个response对象,发送Response,并将Response放入到inflightResponse临时队列
           processNewResponses()
+          //执行NIO poll,获取对应SocketChannel上准备就绪的I/O操作
           poll()
+          //将接收到的request放入Request队列
           processCompletedReceives()
+          //用来处理已经完成的请求,为临时Response队列中的Response执行回调逻辑
           processCompletedSends()
           processDisconnected()
         } catch {
@@ -765,10 +773,14 @@ private[kafka] class Processor(val id: Int,
 
   private def processNewResponses() {
     var currentResponse: RequestChannel.Response = null
+    //currentResponse不为空
     while ({currentResponse = dequeueResponse(); currentResponse != null}) {
+      //获取对应的channelId
       val channelId = currentResponse.request.context.connectionId
       try {
         currentResponse match {
+          //acks=0
+          //不需要返回响应给客户端,内部再次绑定OP_READ事件,接受客户端请求
           case response: NoOpResponse =>
             // There is no response to send to the client, we need to read more pipelined requests
             // that are sitting in the server's socket buffer
@@ -780,6 +792,7 @@ private[kafka] class Processor(val id: Int,
             handleChannelMuteEvent(channelId, ChannelMuteEvent.RESPONSE_SENT)
             tryUnmuteChannel(channelId)
 
+          //服务端给客户端返回响应的分支
           case response: SendResponse =>
             sendResponse(response, response.responseSend)
           case response: CloseConnectionResponse =>
@@ -805,9 +818,11 @@ private[kafka] class Processor(val id: Int,
 
   // `protected` for test usage
   protected[network] def sendResponse(response: RequestChannel.Response, responseSend: Send) {
+    //获取连接id
     val connectionId = response.request.context.connectionId
     trace(s"Socket server received response to send to $connectionId, registering for write and sending data: $response")
     // `channel` can be None if the connection was closed remotely or if selector closed it for being idle for too long
+    //kafkaChannel为空,异常情况
     if (channel(connectionId).isEmpty) {
       warn(s"Attempting to send response via channel for which there is no open connection, connection id $connectionId")
       response.request.updateRequestMetrics(0L, response)
@@ -815,8 +830,11 @@ private[kafka] class Processor(val id: Int,
     // Invoke send for closingChannel as well so that the send is failed and the channel closed properly and
     // removed from the Selector after discarding any pending staged receives.
     // `openOrClosingChannel` can be None if the selector closed the connection because it was idle for too long
+    //正常情况,如果该连接处于可连接状态
     if (openOrClosingChannel(connectionId).isDefined) {
+      //向客户端生产者返回响应
       selector.send(responseSend)
+      //缓存响应到map中
       inflightResponses += (connectionId -> response)
     }
   }
@@ -837,10 +855,14 @@ private[kafka] class Processor(val id: Int,
   }
 
   private def processCompletedReceives() {
+    //遍历每一个请求
     selector.completedReceives.asScala.foreach { receive =>
       try {
+        //获取连接对应的kafkaChannel
         openOrClosingChannel(receive.source) match {
+          //模式匹配
           case Some(channel) =>
+            //获取header信息
             val header = RequestHeader.parse(receive.payload)
             if (header.apiKey() == ApiKeys.SASL_HANDSHAKE && channel.maybeBeginServerReauthentication(receive, nowNanosSupplier))
               trace(s"Begin re-authentication: $channel")
@@ -854,9 +876,12 @@ private[kafka] class Processor(val id: Int,
                 val connectionId = receive.source
                 val context = new RequestContext(header, connectionId, channel.socketAddress,
                   channel.principal, listenerName, securityProtocol)
+                //对于获取到的请求按照协议进行解析,解析成一个request对象
                 val req = new RequestChannel.Request(processor = id, context = context,
                   startTimeNanos = nowNanos, memoryPool, receive.payload, requestChannel.metrics)
+                //把request请求放入队列
                 requestChannel.sendRequest(req)
+                //对当前的连接移除掉OP_READ事件
                 selector.mute(connectionId)
                 handleChannelMuteEvent(connectionId, ChannelMuteEvent.REQUEST_RECEIVED)
               }
@@ -967,9 +992,11 @@ private[kafka] class Processor(val id: Int,
   private def configureNewConnections() {
     var connectionsProcessed = 0
     while (connectionsProcessed < connectionQueueSize && !newConnections.isEmpty) {
+      //不断获取连接队列中的socketChannel
       val channel = newConnections.poll()
       try {
         debug(s"Processor $id listening to new connection from ${channel.socket.getRemoteSocketAddress}")
+        //向Processor上的Selector注册对应的事件
         selector.register(connectionId(channel.socket), channel)
         connectionsProcessed += 1
       } catch {
@@ -1006,11 +1033,13 @@ private[kafka] class Processor(val id: Int,
   }
 
   private[network] def enqueueResponse(response: RequestChannel.Response): Unit = {
+    //添加response到响应队列中
     responseQueue.put(response)
     wakeup()
   }
 
   private def dequeueResponse(): RequestChannel.Response = {
+    //从响应队列中取出一个响应
     val response = responseQueue.poll()
     if (response != null)
       response.request.responseDequeueTimeNanos = Time.SYSTEM.nanoseconds

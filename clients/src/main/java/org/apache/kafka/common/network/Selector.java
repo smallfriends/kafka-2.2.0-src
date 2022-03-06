@@ -331,6 +331,7 @@ public class Selector implements Selectable, AutoCloseable {
      */
     public void register(String id, SocketChannel socketChannel) throws IOException {
         ensureNotRegistered(id);
+        //向自己的Selector注册OP_READ事件,接下来Processor线程就可以读取客户端发送过来的连接了
         registerChannel(id, socketChannel, SelectionKey.OP_READ);
         this.sensors.connectionCreated.record();
     }
@@ -409,6 +410,7 @@ public class Selector implements Selectable, AutoCloseable {
             this.failedSends.add(connectionId);
         } else {
             try {
+                //kafkaChannel中缓存Send请求
                 channel.setSend(send);
             } catch (Exception e) {
                 // update the state for consistency, the channel will be discarded after `close`
@@ -481,10 +483,12 @@ public class Selector implements Selectable, AutoCloseable {
 
         /* check ready keys */
         long startSelect = time.nanoseconds();
+        //统计Selector上有多少个key注册了
         int numReadyKeys = select(timeout);
         long endSelect = time.nanoseconds();
         this.sensors.selectTime.record(endSelect - startSelect, time.milliseconds());
 
+        //使用场景驱动的方式,刚刚分析了确实有一个key注册在
         if (numReadyKeys > 0 || !immediatelyConnectedKeys.isEmpty() || dataInBuffers) {
             Set<SelectionKey> readyKeys = this.nioSelector.selectedKeys();
 

@@ -50,7 +50,7 @@ class KafkaRequestHandler(id: Int,
       // time_window is independent of the number of threads, each recorded idle
       // time should be discounted by # threads.
       val startSelectTime = time.nanoseconds
-
+      //从requestQueue队列中取出每一个Request对象
       val req = requestChannel.receiveRequest(300)
       val endTime = time.nanoseconds
       val idleTime = endTime - startSelectTime
@@ -66,6 +66,7 @@ class KafkaRequestHandler(id: Int,
           try {
             request.requestDequeueTimeNanos = endTime
             trace(s"Kafka request handler $id on broker $brokerId handling request $request")
+            //通过KafkaApis对Request对象进行最终的处理
             apis.handle(request)
           } catch {
             case e: FatalExitError =>
@@ -99,19 +100,24 @@ class KafkaRequestHandlerPool(val brokerId: Int,
                               numThreads: Int,
                               requestHandlerAvgIdleMetricName: String,
                               logAndThreadNamePrefix : String) extends Logging with KafkaMetricsGroup {
-
+  //线程池大小为8
   private val threadPoolSize: AtomicInteger = new AtomicInteger(numThreads)
   /* a meter to track the average free capacity of the request handlers */
   private val aggregateIdleMeter = newMeter(requestHandlerAvgIdleMetricName, "percent", TimeUnit.NANOSECONDS)
 
   this.logIdent = "[" + logAndThreadNamePrefix + " Kafka Request Handler on Broker " + brokerId + "], "
+  //创建一个定长为8的数组存储kafkaRequestHandler线程,numThread:num.io.threads默认值为8
   val runnables = new mutable.ArrayBuffer[KafkaRequestHandler](numThreads)
+  //默认启动了8个线程,一般情况下生产环境中需要设置该参数,提升处理请求的能力
   for (i <- 0 until numThreads) {
+    //依次创建KafkaRequestHandler线程
     createHandler(i)
   }
 
   def createHandler(id: Int): Unit = synchronized {
+    //创建KafkaRequestHandle线程
     runnables += new KafkaRequestHandler(id, brokerId, aggregateIdleMeter, threadPoolSize, requestChannel, apis, time)
+    //启动KafkaRequestHandler线程
     KafkaThread.daemon(logAndThreadNamePrefix + "-kafka-request-handler-" + id, runnables(id)).start()
   }
 
