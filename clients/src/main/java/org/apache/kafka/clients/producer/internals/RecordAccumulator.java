@@ -195,7 +195,7 @@ public final class RecordAccumulator {
         if (headers == null) headers = Record.EMPTY_HEADERS;
         try {
             // check if we have an in-progress batch
-            //步骤一：根据分区获取消息所属的队列中
+            //步骤一：根据分区获取消息所属的队列中,获取或创建一个队列(按照每个主题的分区)
             Deque<ProducerBatch> dq = getOrCreateDeque(tp);
 
             //加锁
@@ -218,7 +218,7 @@ public final class RecordAccumulator {
             int size = Math.max(this.batchSize, AbstractRecords.estimateSizeInBytesUpperBound(maxUsableMagic, compression, key, value, headers));
             log.trace("Allocating a new {} byte message buffer for topic {} partition {}", size, tp.topic(), tp.partition());
 
-            //步骤四：根据批次大小分配内存
+            //步骤四：根据批次大小分配内存,从内存池中分配内存,DQueue是一个双端队列
             buffer = free.allocate(size, maxTimeToBlock);   //内存池的设计
             synchronized (dq) {
                 // Need to check if producer is closed again after grabbing the dequeue lock.
@@ -232,10 +232,10 @@ public final class RecordAccumulator {
                     // Somebody else found us a batch, return the one we waited for! Hopefully this doesn't happen often...
                     return appendResult;
                 }
-
+                //封装内存buffer
                 MemoryRecordsBuilder recordsBuilder = recordsBuilder(buffer, maxUsableMagic);
 
-                //步骤六：根据内存大小封装批次
+                //步骤六：再次封装,得到真正的批次大小,根据内存大小封装批次(批次可以大于16k,不会小于16k)
                 ProducerBatch batch = new ProducerBatch(tp, recordsBuilder, time.milliseconds());
                 //尝试往这个批次写数据，到这个时候，代码会执行成功
                 FutureRecordMetadata future = Utils.notNull(batch.tryAppend(timestamp, key, value, headers, callback, time.milliseconds()));
@@ -485,9 +485,13 @@ public final class RecordAccumulator {
                     //批次不为null，判断批次是否可以发送
                     if (batch != null) {
                         long waitedTimeMs = batch.waitedTimeMs(nowMs);
+                        //如果不是第一次拉取,且等待时间小于重试时间,默认100ms,backingOff=true
                         boolean backingOff = batch.attempts() > 0 && waitedTimeMs < retryBackoffMs;
+                        //如果backingOff是true,取retryBackoffMs;如果不是第一次拉取,取lingerMs,默认是0
                         long timeToWaitMs = backingOff ? retryBackoffMs : lingerMs;
+                        //批次大小满足发送条件
                         boolean full = deque.size() > 1 || batch.isFull();
+                        //如果超时,也要发送
                         boolean expired = waitedTimeMs >= timeToWaitMs;
                         boolean sendable = full || expired || exhausted || closed || flushInProgress();
                         if (sendable && !backingOff) {
@@ -633,7 +637,7 @@ public final class RecordAccumulator {
     public Map<Integer, List<ProducerBatch>> drain(Cluster cluster, Set<Node> nodes, int maxSize, long now) {
         if (nodes.isEmpty())
             return Collections.emptyMap();
-
+        //
         Map<Integer, List<ProducerBatch>> batches = new HashMap<>();
         for (Node node : nodes) {
             List<ProducerBatch> ready = drainBatchesForOneNode(cluster, node, maxSize, now);

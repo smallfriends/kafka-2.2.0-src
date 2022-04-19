@@ -208,6 +208,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
         for (Map.Entry<Node, FetchSessionHandler.FetchRequestData> entry : fetchRequestMap.entrySet()) {
             final Node fetchTarget = entry.getKey();
             final FetchSessionHandler.FetchRequestData data = entry.getValue();
+            //maxWaitMs 默认500ms
+            //minBytes 最少一次抓取1个字节
+            //maxBytes 最多一次抓取多少数据 默认50M
             final FetchRequest.Builder request = FetchRequest.Builder
                     .forConsumer(this.maxWaitMs, this.minBytes, data.toSend())
                     .isolationLevel(isolationLevel)
@@ -218,11 +221,13 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                 log.debug("Sending {} {} to broker {}", isolationLevel, data.toString(), fetchTarget);
             }
             client.send(fetchTarget, request)
+                    //发送一次请求后,通过回调返回数据,用一个监听器
                     .addListener(new RequestFutureListener<ClientResponse>() {
                         @Override
                         public void onSuccess(ClientResponse resp) {
                             synchronized (Fetcher.this) {
                                 @SuppressWarnings("unchecked")
+                                //成功的获取到数据
                                 FetchResponse<Records> response = (FetchResponse<Records>) resp.responseBody();
                                 FetchSessionHandler handler = sessionHandler(fetchTarget.id());
                                 if (handler == null) {
@@ -244,6 +249,7 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
 
                                     log.debug("Fetch {} at offset {} for partition {} returned fetch data {}",
                                             isolationLevel, fetchOffset, partition, fetchData);
+                                    //队列completedFetches放从kafka抓取到的数据
                                     completedFetches.add(new CompletedFetch(partition, fetchOffset, fetchData, metricAggregator,
                                             resp.requestHeader().apiVersion()));
                                 }
@@ -479,12 +485,15 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
      */
     public Map<TopicPartition, List<ConsumerRecord<K, V>>> fetchedRecords() {
         Map<TopicPartition, List<ConsumerRecord<K, V>>> fetched = new HashMap<>();
+        //每次处理的最大条数是500条
         int recordsRemaining = maxPollRecords;
 
         try {
             while (recordsRemaining > 0) {
                 if (nextInLineRecords == null || nextInLineRecords.isFetched) {
+                    //从队列completedFetches中获取数据
                     CompletedFetch completedFetch = completedFetches.peek();
+                    //退出条件,如果队列completedFetches没有数据了,可以退出循环
                     if (completedFetch == null) break;
 
                     try {
@@ -501,6 +510,7 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                         }
                         throw e;
                     }
+                    //处理数据
                     completedFetches.poll();
                 } else {
                     List<ConsumerRecord<K, V>> records = fetchRecords(nextInLineRecords, recordsRemaining);
@@ -518,6 +528,7 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                             newRecords.addAll(records);
                             fetched.put(partition, newRecords);
                         }
+                        //退出条件:拉取到500条数据退出
                         recordsRemaining -= records.size();
                     }
                 }

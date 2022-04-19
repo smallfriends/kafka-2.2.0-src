@@ -366,7 +366,7 @@ public class Sender implements Runnable {
          */
         //create produce requests
         //获取要发送的records，如果网络没有建立好，这块代码也是不会执行的
-        //Map<brokerId，数据>，减少网络请求
+        //Map<brokerId，数据>，减少网络请求,发送每个节点的数据,进行封装
         Map<Integer, List<ProducerBatch>> batches = this.accumulator.drain(cluster, result.readyNodes, this.maxRequestSize, now);
         addToInflightBatches(batches);
         //保证顺序发送，也就是该参数 max.in.flight.requests.per.connection=1
@@ -825,8 +825,10 @@ public class Sender implements Runnable {
         };
 
         String nodeId = Integer.toString(destination);
+        //创建一个客户端请求,返回一个对象
         ClientRequest clientRequest = client.newClientRequest(nodeId, requestBuilder, now, acks != 0,
                 requestTimeoutMs, callback);
+        //发送一个请求到服务端
         client.send(clientRequest, now);
         log.trace("Sent produce request to {}: {}", nodeId, requestBuilder);
     }

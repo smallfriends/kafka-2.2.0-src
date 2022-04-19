@@ -309,7 +309,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
      */
     public boolean poll(Timer timer) {
         invokeCompletedOffsetCommitCallbacks();
-
+        //
         if (subscriptions.partitionsAutoAssigned()) {
             // Always update the heartbeat last poll time so that the heartbeat thread does not leave the
             // group proactively due to application inactivity even if (say) the coordinator cannot be found.

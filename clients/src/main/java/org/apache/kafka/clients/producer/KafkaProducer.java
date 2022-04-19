@@ -387,7 +387,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             // load interceptors and make sure they get clientId
             userProvidedConfigs.put(ProducerConfig.CLIENT_ID_CONFIG, clientId);
             ProducerConfig configWithClientId = new ProducerConfig(userProvidedConfigs, false);
-            //设置拦截器，类似于一个过滤器
+            //设置拦截器，类似于一个过滤器,拦截器可以有多个
             List<ProducerInterceptor<K, V>> interceptorList = (List) configWithClientId.getConfiguredInstances(
                     ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, ProducerInterceptor.class);
             if (interceptors != null)
@@ -410,13 +410,13 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             int deliveryTimeoutMs = configureDeliveryTimeout(config, log);
 
             this.apiVersions = new ApiVersions();
-            //创建了一个核心组件RecordAccumulator，缓存消息
+            //创建了一个核心组件RecordAccumulator对象，缓存消息
             this.accumulator = new RecordAccumulator(logContext,
-                    //每个批次的大小
+                    //每个批次的大小,默认为16k
                     config.getInt(ProducerConfig.BATCH_SIZE_CONFIG),
-                    //压缩
+                    //压缩方式,默认为none
                     this.compressionType,
-                    //默认为0，延迟发送时间
+                    //默认为0,延迟发送时间,linger.ms默认为0
                     config.getInt(ProducerConfig.LINGER_MS_CONFIG),
                     retryBackoffMs,
                     deliveryTimeoutMs,
@@ -425,8 +425,10 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     time,
                     apiVersions,
                     transactionManager,
+                    //内存池(内存池大小32M,batch.size_config=16k)
                     new BufferPool(this.totalMemorySize, config.getInt(ProducerConfig.BATCH_SIZE_CONFIG), metrics, time, PRODUCER_METRIC_GROUP_NAME));
             List<InetSocketAddress> addresses = ClientUtils.parseAndValidateAddresses(
+                    //kafka地址
                     config.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG),
                     config.getString(ProducerConfig.CLIENT_DNS_LOOKUP_CONFIG));
             //判断kafka集群元数据信息是否存在
@@ -452,7 +454,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             //把业务代码与线程代码进行隔离，这样会显得清晰
             this.ioThread = new KafkaThread(ioThreadName, this.sender, true);
 
-            //启动线程
+            //启动Sender线程
             this.ioThread.start();
             config.logUnused();
             AppInfoParser.registerAppInfo(JMX_PREFIX, clientId, metrics);
@@ -468,11 +470,19 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     // visible for testing
     //构建一个Sender线程
     Sender newSender(LogContext logContext, KafkaClient kafkaClient, Metadata metadata) {
+        //默认每个broker节点最多缓存5个请求
         int maxInflightRequests = configureInflightRequests(producerConfig, transactionManager != null);
+        //请求超时时间,默认30s
         int requestTimeoutMs = producerConfig.getInt(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG);
         ChannelBuilder channelBuilder = ClientUtils.createChannelBuilder(producerConfig, time);
         ProducerMetrics metricsRegistry = new ProducerMetrics(this.metrics);
         Sensor throttleTimeSensor = Sender.throttleTimeSensor(metricsRegistry.senderMetrics);
+        // 创建一个客户端对象,
+        // clientId,客户端id
+        // maxInflightRequests,缓存请求的个数,5个
+        // RECONNECT_BACKOFF_MAX_MS_CONFIG,总的重试时间
+        // SEND_BUFFER_CONFIG,发送数据缓冲区大小,默认128k
+        // RECEIVE_BUFFER_CONFIG,接收数据缓冲区大小,默认32k
         KafkaClient client = kafkaClient != null ? kafkaClient : new NetworkClient(
                 new Selector(producerConfig.getLong(ProducerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG),
                         this.metrics, time, "producer", channelBuilder, logContext),
@@ -496,6 +506,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
         int retries = configureRetries(producerConfig, transactionManager != null, log);
         //获取acks参数，0、1、-1，一般设置为1
         short acks = configureAcks(producerConfig, transactionManager != null, log);
+        //创建Sender线程
         return new Sender(logContext,
                 client,
                 metadata,
@@ -875,6 +886,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback) {
         // intercept the record, which can be potentially modified; this method does not throw exceptions
+
         ProducerRecord<K, V> interceptedRecord = this.interceptors.onSend(record);
         return doSend(interceptedRecord, callback);
     }
@@ -941,7 +953,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             int serializedSize = AbstractRecords.estimateSizeInBytesUpperBound(apiVersions.maxUsableProduceMagic(),
                     compressionType, serializedKey, serializedValue, headers);
 
-            //校验消息的大小
+            //校验消息的大小,保证消息大小能够传输(序列化和压缩后的大小)
             ensureValidRecordSize(serializedSize);
             long timestamp = record.timestamp() == null ? time.milliseconds() : record.timestamp();
             log.trace("Sending record {} with callback {} to topic {} partition {}", record, callback, record.topic(), partition);
@@ -954,11 +966,11 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             if (transactionManager != null && transactionManager.isTransactional())
                 transactionManager.maybeAddPartitionToTransaction(tp);
 
-            //第七步，把消息放入Accumulator（32M的一个内存）
+            //第七步，把消息放入Accumulator缓存,追加数据到缓存（32M的一个内存）,result是是否添加成功的结果
             RecordAccumulator.RecordAppendResult result = accumulator.append(tp, timestamp, serializedKey,
                     serializedValue, headers, interceptCallback, remainingWaitMs);
 
-            //如果批次满了，或者是新创建的一个批次
+            //如果批次(batch)满了，或者是新创建的一个批次
             if (result.batchIsFull || result.newBatchCreated) {
                 log.trace("Waking up the sender since topic {} partition {} is either full or getting a new batch", record.topic(), partition);
 

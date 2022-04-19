@@ -74,7 +74,7 @@ public class DefaultPartitioner implements Partitioner {
             }
         } else {
             // hash the keyBytes to choose a partition
-            //策略二：指定key
+            //策略二：指定key,按照key的hashcode的值,对分区数求模
             return Utils.toPositive(Utils.murmur2(keyBytes)) % numPartitions;
         }
     }

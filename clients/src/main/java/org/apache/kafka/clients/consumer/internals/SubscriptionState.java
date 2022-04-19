@@ -110,11 +110,11 @@ public class SubscriptionState {
     public void subscribe(Set<String> topics, ConsumerRebalanceListener listener) {
         if (listener == null)
             throw new IllegalArgumentException("RebalanceListener cannot be null");
-
+        //按照主题自动订阅模式
         setSubscriptionType(SubscriptionType.AUTO_TOPICS);
-
+        //注册负载均衡监听器,消费者信息变化可以被监听到
         this.rebalanceListener = listener;
-
+        //判断是否需要更改订阅的主题
         changeSubscription(topics);
     }
 

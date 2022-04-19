@@ -58,6 +58,7 @@ public class ConsumerInterceptors<K, V> implements Closeable {
         ConsumerRecords<K, V> interceptRecords = records;
         for (ConsumerInterceptor<K, V> interceptor : this.interceptors) {
             try {
+                //每个拦截器都会对数据进行加工
                 interceptRecords = interceptor.onConsume(interceptRecords);
             } catch (Exception e) {
                 // do not propagate interceptor exception, log and continue calling other interceptors

@@ -45,7 +45,7 @@ public class KafkaThread extends Thread {
     }
 
     private void configureThread(final String name, boolean daemon) {
-        //把线程设置为后台线程
+        //把Sender线程设置为后台线程
         setDaemon(daemon);
         setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
             public void uncaughtException(Thread t, Throwable e) {
