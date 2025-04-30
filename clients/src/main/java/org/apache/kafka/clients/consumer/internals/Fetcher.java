@@ -204,6 +204,7 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
      * @return number of fetches sent
      */
     public synchronized int sendFetches() {
+        //封装请求
         Map<Node, FetchSessionHandler.FetchRequestData> fetchRequestMap = prepareFetchRequests();
         for (Map.Entry<Node, FetchSessionHandler.FetchRequestData> entry : fetchRequestMap.entrySet()) {
             final Node fetchTarget = entry.getKey();

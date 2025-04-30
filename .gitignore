@@ -1,2 +1,49 @@
-# Project exclude paths
-/.gradle/
+# IntelliJ IDEA
+.idea/
+
+# User-specific files
+*.iws
+*.iml
+*.ipr
+*.xml
+# Project-specific files
+out/
+
+# Log files
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Build directories
+target/
+build/
+
+# JetBrains Rider files
+.idea/.idea/
+
+# IntelliJ IDEA settings for specific environments
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+
+# Compiled class files
+*.class
+
+# JAR files
+*.jar
+*.war
+*.ear
+
+# Gradle
+.gradle/
+
+# Maven
+.mvn/
+target/
+
+# Eclipse project files
+.project
+.classpath
+.settings/

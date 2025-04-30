@@ -107,6 +107,7 @@ class KafkaApis(val requestChannel: RequestChannel,
       request.header.apiKey match {
         //处理生产者发送过来的请求
         case ApiKeys.PRODUCE => handleProduceRequest(request)
+        //我们知道follower发送过来拉取数据的请求（同步数据）；消费者消费数据的请求
         case ApiKeys.FETCH => handleFetchRequest(request)
         case ApiKeys.LIST_OFFSETS => handleListOffsetRequest(request)
         case ApiKeys.METADATA => handleTopicMetadataRequest(request)
@@ -117,9 +118,11 @@ class KafkaApis(val requestChannel: RequestChannel,
         case ApiKeys.OFFSET_COMMIT => handleOffsetCommitRequest(request)
         case ApiKeys.OFFSET_FETCH => handleOffsetFetchRequest(request)
         case ApiKeys.FIND_COORDINATOR => handleFindCoordinatorRequest(request)
+        //
         case ApiKeys.JOIN_GROUP => handleJoinGroupRequest(request)
         case ApiKeys.HEARTBEAT => handleHeartbeatRequest(request)
         case ApiKeys.LEAVE_GROUP => handleLeaveGroupRequest(request)
+        //
         case ApiKeys.SYNC_GROUP => handleSyncGroupRequest(request)
         case ApiKeys.DESCRIBE_GROUPS => handleDescribeGroupRequest(request)
         case ApiKeys.LIST_GROUPS => handleListGroupsRequest(request)
@@ -1272,6 +1275,7 @@ class KafkaApis(val requestChannel: RequestChannel,
       // let the coordinator handle join-group
       val protocols = joinGroupRequest.groupProtocols().asScala.map(protocol =>
         (protocol.name, Utils.toArray(protocol.metadata))).toList
+      //请求处理
       groupCoordinator.handleJoinGroup(
         joinGroupRequest.groupId,
         joinGroupRequest.memberId,
@@ -1341,6 +1345,7 @@ class KafkaApis(val requestChannel: RequestChannel,
         new HeartbeatResponse(requestThrottleMs, Errors.GROUP_AUTHORIZATION_FAILED))
     } else {
       // let the coordinator to handle heartbeat
+      //coordinator处理heartbeat请求
       groupCoordinator.handleHeartbeat(
         heartbeatRequest.groupId,
         heartbeatRequest.memberId,

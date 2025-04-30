@@ -215,9 +215,12 @@ private[group] class GroupMetadata(val groupId: String, initialState: GroupState
     assert(groupId == member.groupId)
     assert(this.protocolType.orNull == member.protocolType)
     assert(supportsProtocols(member.protocolType, MemberMetadata.plainProtocolSet(member.supportedProtocols)))
-
-    if (leaderId.isEmpty)
+    //第一次进来的时候leaderid肯定是空的
+    if (leaderId.isEmpty) {
+      //我们就知道了，其实让哪个consumer作为leader consumer很简单
+      //就是谁先注册上来，谁就是leader consumer
       leaderId = Some(member.memberId)
+    }
     members.put(member.memberId, member)
     member.supportedProtocols.foreach{ case (protocol, _) => supportedProtocols(protocol) += 1 }
     member.awaitingJoinCallback = callback

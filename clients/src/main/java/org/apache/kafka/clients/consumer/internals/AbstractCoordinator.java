@@ -341,6 +341,7 @@ public abstract class AbstractCoordinator implements Closeable {
         }
 
         startHeartbeatThreadIfNeeded();
+        //发送注册请求的代码在里面
         return joinGroupIfNeeded(timer);
     }
 
@@ -383,6 +384,7 @@ public abstract class AbstractCoordinator implements Closeable {
      */
     boolean joinGroupIfNeeded(final Timer timer) {
         while (rejoinNeededOrPending()) {
+            //再次判断是否已经确定好了哪台是coondinator服务器
             if (!ensureCoordinatorReady(timer)) {
                 return false;
             }
@@ -445,6 +447,7 @@ public abstract class AbstractCoordinator implements Closeable {
             disableHeartbeatThread();
 
             state = MemberState.REBALANCING;
+            //发送一个注册的请求
             joinFuture = sendJoinGroupRequest();
             joinFuture.addListener(new RequestFutureListener<ByteBuffer>() {
                 @Override
@@ -502,6 +505,7 @@ public abstract class AbstractCoordinator implements Closeable {
         // maximum time that it may block on the coordinator. We add an extra 5 seconds for small delays.
 
         int joinGroupTimeoutMs = Math.max(rebalanceTimeoutMs, rebalanceTimeoutMs + 5000);
+        //发送请求
         return client.send(coordinator, requestBuilder, joinGroupTimeoutMs)
                 .compose(new JoinGroupResponseHandler());
     }
@@ -523,6 +527,10 @@ public abstract class AbstractCoordinator implements Closeable {
                         AbstractCoordinator.this.generation = new Generation(joinResponse.generationId(),
                                 joinResponse.memberId(), joinResponse.groupProtocol());
                         if (joinResponse.isLeader()) {
+                            //我们所有的消费者组里面的成员，都回去发送joinGroup，
+                            //最终只会有一个consumer是leader
+                            //如果发现自己是leader的consumer，那么就会调用这个方法，然后制定分区方案
+                            //把分区分配方案发送给coordinator
                             onJoinLeader(joinResponse).chain(future);
                         } else {
                             onJoinFollower().chain(future);
@@ -587,12 +595,14 @@ public abstract class AbstractCoordinator implements Closeable {
     private RequestFuture<ByteBuffer> onJoinLeader(JoinGroupResponse joinResponse) {
         try {
             // perform the leader synchronization and send back the assignment for the group
+            //这个方法就是制定分区方案的方法
             Map<String, ByteBuffer> groupAssignment = performAssignment(joinResponse.leaderId(), joinResponse.groupProtocol(),
                     joinResponse.members());
 
             SyncGroupRequest.Builder requestBuilder =
                     new SyncGroupRequest.Builder(groupId, generation.generationId, generation.memberId, groupAssignment);
             log.debug("Sending leader SyncGroup to coordinator {}: {}", this.coordinator, requestBuilder);
+            //发送请求
             return sendSyncGroupRequest(requestBuilder);
         } catch (RuntimeException e) {
             return RequestFuture.failure(e);
@@ -602,6 +612,7 @@ public abstract class AbstractCoordinator implements Closeable {
     private RequestFuture<ByteBuffer> sendSyncGroupRequest(SyncGroupRequest.Builder requestBuilder) {
         if (coordinatorUnknown())
             return RequestFuture.coordinatorNotAvailable();
+        //发送SYNC_GROUP
         return client.send(coordinator, requestBuilder)
                 .compose(new SyncGroupResponseHandler());
     }
@@ -847,8 +858,10 @@ public abstract class AbstractCoordinator implements Closeable {
     // visible for testing
     synchronized RequestFuture<Void> sendHeartbeatRequest() {
         log.debug("Sending Heartbeat request to coordinator {}", coordinator);
+        //封装请求
         HeartbeatRequest.Builder requestBuilder =
                 new HeartbeatRequest.Builder(this.groupId, this.generation.generationId, this.generation.memberId);
+        //把请求发送出去，HEARTBEAT
         return client.send(coordinator, requestBuilder)
                 .compose(new HeartbeatResponseHandler());
     }
@@ -1060,8 +1073,9 @@ public abstract class AbstractCoordinator implements Closeable {
                             // coordinator disconnected
                             AbstractCoordinator.this.wait(retryBackoffMs);
                         } else {
+                            //设置心跳的时间
                             heartbeat.sentHeartbeat(now);
-
+                            //发送心跳的请求
                             sendHeartbeatRequest().addListener(new RequestFutureListener<Void>() {
                                 @Override
                                 public void onSuccess(Void value) {

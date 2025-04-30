@@ -141,6 +141,7 @@ class GroupCoordinator(val brokerId: Int,
             } else if (isUnknownMember) {
               doUnknownJoinGroup(group, requireKnownMemberId, clientId, clientHost, rebalanceTimeoutMs, sessionTimeoutMs, protocolType, protocols, responseCallback)
             } else {
+              //处理加入group的请求，核心代码
               doJoinGroup(group, memberId, clientId, clientHost, rebalanceTimeoutMs, sessionTimeoutMs, protocolType, protocols, responseCallback)
             }
 
@@ -208,6 +209,7 @@ class GroupCoordinator(val brokerId: Int,
         responseCallback(joinError(memberId, Errors.INCONSISTENT_GROUP_PROTOCOL))
       } else if (group.isPendingMember(memberId)) {
         // A rejoining pending member will be accepted.
+        //核心代码
         addMemberAndRebalance(rebalanceTimeoutMs, sessionTimeoutMs, memberId, clientId, clientHost, protocolType,
           protocols, group, responseCallback)
       } else if (!group.has(memberId)) {
@@ -289,6 +291,7 @@ class GroupCoordinator(val brokerId: Int,
       case None =>
         groupManager.getGroup(groupId) match {
           case None => responseCallback(Array.empty, Errors.UNKNOWN_MEMBER_ID)
+          //
           case Some(group) => doSyncGroup(group, generation, memberId, groupAssignment, responseCallback)
         }
     }
@@ -333,7 +336,9 @@ class GroupCoordinator(val brokerId: Int,
                       resetAndPropagateAssignmentError(group, error)
                       maybePrepareRebalance(group, s"error when storing group assignment during SyncGroup (member: $memberId)")
                     } else {
+                      //coordinator下发分区方案
                       setAndPropagateAssignment(group, assignment)
+                      //把group的状态切换为Stable状态
                       group.transitionTo(Stable)
                     }
                   }
@@ -483,6 +488,7 @@ class GroupCoordinator(val brokerId: Int,
               responseCallback(Errors.ILLEGAL_GENERATION)
             } else {
               val member = group.get(memberId)
+              //TODO
               completeAndScheduleNextHeartbeatExpiration(group, member)
               responseCallback(Errors.NONE)
             }
@@ -695,12 +701,17 @@ class GroupCoordinator(val brokerId: Int,
   private def resetAndPropagateAssignmentError(group: GroupMetadata, error: Errors) {
     assert(group.is(CompletingRebalance))
     group.allMemberMetadata.foreach(_.assignment = Array.empty[Byte])
+    //下发分区分配方案
     propagateAssignment(group, error)
   }
-
+  //
   private def propagateAssignment(group: GroupMetadata, error: Errors) {
+    //遍历所有的member
     for (member <- group.allMemberMetadata) {
       if (member.awaitingSyncCallback != null) {
+        //调用回调函数
+        //这个assignment参数就是分配的分区消费方案
+        //其实coordinator就是通过调用这个member的回调函数，然后完成的分区分配方案的下发
         member.awaitingSyncCallback(member.assignment, error)
         member.awaitingSyncCallback = null
 
@@ -732,11 +743,14 @@ class GroupCoordinator(val brokerId: Int,
 
   private def completeAndScheduleNextExpiration(group: GroupMetadata, member: MemberMetadata, timeoutMs: Long) {
     // complete current heartbeat expectation
+    //检查心跳，更新consumer的上一次心跳时间
     member.latestHeartbeat = time.milliseconds()
     val memberKey = MemberKey(member.groupId, member.memberId)
     heartbeatPurgatory.checkAndComplete(memberKey)
 
     // reschedule the next heartbeat expiration deadline
+    //时间轮机制，把往时间轮里面插入一个任务，这个任务就是用来检查心跳是否超时
+    //
     val deadline = member.latestHeartbeat + timeoutMs
     val delayedHeartbeat = new DelayedHeartbeat(this, group, member.memberId, isPending = false, deadline, timeoutMs)
     heartbeatPurgatory.tryCompleteElseWatch(delayedHeartbeat, Seq(memberKey))
@@ -775,7 +789,7 @@ class GroupCoordinator(val brokerId: Int,
     // update the newMemberAdded flag to indicate that the join group can be further delayed
     if (group.is(PreparingRebalance) && group.generationId == 0)
       group.newMemberAdded = true
-
+    //往消费者组中添加自己的信息
     group.add(member, callback)
 
     // The session timeout does not affect new members since they do not have their memberId and

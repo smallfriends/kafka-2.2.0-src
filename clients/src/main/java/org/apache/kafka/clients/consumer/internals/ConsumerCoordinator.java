@@ -75,7 +75,9 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     private final ConsumerCoordinatorMetrics sensors;
     private final SubscriptionState subscriptions;
     private final OffsetCommitCallback defaultOffsetCommitCallback;
+    //配置是否进行自动提交偏移的标志位
     private final boolean autoCommitEnabled;
+    //每隔多久提交一次偏移量信息，消费offset
     private final int autoCommitIntervalMs;
     private final ConsumerInterceptors<?, ?> interceptors;
     private final boolean excludeInternalTopics;
@@ -314,6 +316,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
             // Always update the heartbeat last poll time so that the heartbeat thread does not leave the
             // group proactively due to application inactivity even if (say) the coordinator cannot be found.
             pollHeartbeat(timer.currentTimeMs());
+            //计算出来哪台服务器是coondinator服务器
             if (coordinatorUnknown() && !ensureCoordinatorReady(timer)) {
                 return false;
             }
@@ -616,6 +619,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     }
 
     private void doCommitOffsetsAsync(final Map<TopicPartition, OffsetAndMetadata> offsets, final OffsetCommitCallback callback) {
+        //里面就是发送提交偏移量的请求
         RequestFuture<Void> future = sendOffsetCommitRequest(offsets);
         final OffsetCommitCallback cb = callback == null ? defaultOffsetCommitCallback : callback;
         future.addListener(new RequestFutureListener<Void>() {
@@ -782,7 +786,8 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
                 setMemberId(generation.memberId);
 
         log.trace("Sending OffsetCommit request with {} to coordinator {}", offsets, coordinator);
-
+        //OFFSET_COMMIT
+        //发送请求
         return client.send(coordinator, builder)
                 .compose(new OffsetCommitResponseHandler(offsets));
     }
