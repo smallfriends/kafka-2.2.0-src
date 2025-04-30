@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.directory.server:apacheds-interceptors-operational:2.0.0-M24">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-operational/2.0.0-M24/32189483f8c2332d19405d64f4b0fc6ad1e5dea0/apacheds-interceptors-operational-2.0.0-M24.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-operational/2.0.0-M24/32189483f8c2332d19405d64f4b0fc6ad1e5dea0/apacheds-interceptors-operational-2.0.0-M24.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-operational/2.0.0-M24/d61c3415872d1c06804de86c62afe303df3ecfdf/apacheds-interceptors-operational-2.0.0-M24-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-operational/2.0.0-M24/d61c3415872d1c06804de86c62afe303df3ecfdf/apacheds-interceptors-operational-2.0.0-M24-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

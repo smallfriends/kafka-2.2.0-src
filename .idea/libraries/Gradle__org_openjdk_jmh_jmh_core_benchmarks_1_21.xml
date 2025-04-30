@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.openjdk.jmh:jmh-core-benchmarks:1.21">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core-benchmarks/1.21/9ad799fa03f43826e7d1a288b1153d0d5de7db23/jmh-core-benchmarks-1.21.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core-benchmarks/1.21/9ad799fa03f43826e7d1a288b1153d0d5de7db23/jmh-core-benchmarks-1.21.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core-benchmarks/1.21/85caa8fce16d9a6a1d2a5b89f3e6831f7373a7aa/jmh-core-benchmarks-1.21-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core-benchmarks/1.21/85caa8fce16d9a6a1d2a5b89f3e6831f7373a7aa/jmh-core-benchmarks-1.21-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

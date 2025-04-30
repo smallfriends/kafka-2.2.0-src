@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.directory.server:apacheds-core-api:2.0.0-M24">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-core-api/2.0.0-M24/5ac7d54b455bbd681d7061e9e919e6504ed77c99/apacheds-core-api-2.0.0-M24.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-core-api/2.0.0-M24/5ac7d54b455bbd681d7061e9e919e6504ed77c99/apacheds-core-api-2.0.0-M24.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-core-api/2.0.0-M24/39f7e9546507cc158181e664fa8d00da9ad1db71/apacheds-core-api-2.0.0-M24-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-core-api/2.0.0-M24/39f7e9546507cc158181e664fa8d00da9ad1db71/apacheds-core-api-2.0.0-M24-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.directory.server:apacheds-protocol-ldap:2.0.0-M24">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-protocol-ldap/2.0.0-M24/43d5437c1928d66518e989bba6c8287f25a31bcc/apacheds-protocol-ldap-2.0.0-M24.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-protocol-ldap/2.0.0-M24/43d5437c1928d66518e989bba6c8287f25a31bcc/apacheds-protocol-ldap-2.0.0-M24.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-protocol-ldap/2.0.0-M24/187be2473dd5cf1706b0b83bd825e757ae94b494/apacheds-protocol-ldap-2.0.0-M24-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-protocol-ldap/2.0.0-M24/187be2473dd5cf1706b0b83bd825e757ae94b494/apacheds-protocol-ldap-2.0.0-M24-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

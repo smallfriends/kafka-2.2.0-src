@@ -43,6 +43,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/log4j-appender/kafka-2.2.0-src.log4j-appender.iml" filepath="$PROJECT_DIR$/.idea/modules/log4j-appender/kafka-2.2.0-src.log4j-appender.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/log4j-appender/kafka-2.2.0-src.log4j-appender.main.iml" filepath="$PROJECT_DIR$/.idea/modules/log4j-appender/kafka-2.2.0-src.log4j-appender.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/log4j-appender/kafka-2.2.0-src.log4j-appender.test.iml" filepath="$PROJECT_DIR$/.idea/modules/log4j-appender/kafka-2.2.0-src.log4j-appender.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/kafka-2.2.0-src.main.iml" filepath="$PROJECT_DIR$/.idea/modules/kafka-2.2.0-src.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/streams/kafka-2.2.0-src.streams.iml" filepath="$PROJECT_DIR$/.idea/modules/streams/kafka-2.2.0-src.streams.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/streams/examples/kafka-2.2.0-src.streams.examples.iml" filepath="$PROJECT_DIR$/.idea/modules/streams/examples/kafka-2.2.0-src.streams.examples.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/streams/examples/kafka-2.2.0-src.streams.examples.main.iml" filepath="$PROJECT_DIR$/.idea/modules/streams/examples/kafka-2.2.0-src.streams.examples.main.iml" />
@@ -79,6 +80,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/streams/upgrade-system-tests-21/kafka-2.2.0-src.streams.upgrade-system-tests-21.iml" filepath="$PROJECT_DIR$/.idea/modules/streams/upgrade-system-tests-21/kafka-2.2.0-src.streams.upgrade-system-tests-21.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/streams/upgrade-system-tests-21/kafka-2.2.0-src.streams.upgrade-system-tests-21.main.iml" filepath="$PROJECT_DIR$/.idea/modules/streams/upgrade-system-tests-21/kafka-2.2.0-src.streams.upgrade-system-tests-21.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/streams/upgrade-system-tests-21/kafka-2.2.0-src.streams.upgrade-system-tests-21.test.iml" filepath="$PROJECT_DIR$/.idea/modules/streams/upgrade-system-tests-21/kafka-2.2.0-src.streams.upgrade-system-tests-21.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/kafka-2.2.0-src.test.iml" filepath="$PROJECT_DIR$/.idea/modules/kafka-2.2.0-src.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/tools/kafka-2.2.0-src.tools.iml" filepath="$PROJECT_DIR$/.idea/modules/tools/kafka-2.2.0-src.tools.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/tools/kafka-2.2.0-src.tools.main.iml" filepath="$PROJECT_DIR$/.idea/modules/tools/kafka-2.2.0-src.tools.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/tools/kafka-2.2.0-src.tools.test.iml" filepath="$PROJECT_DIR$/.idea/modules/tools/kafka-2.2.0-src.tools.test.iml" />

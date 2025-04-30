@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.directory.server:apacheds-xdbm-partition:2.0.0-M24">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-xdbm-partition/2.0.0-M24/13bc01649c0a47a2bdc4edae7b21638888ad13bb/apacheds-xdbm-partition-2.0.0-M24.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-xdbm-partition/2.0.0-M24/13bc01649c0a47a2bdc4edae7b21638888ad13bb/apacheds-xdbm-partition-2.0.0-M24.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-xdbm-partition/2.0.0-M24/704c9f3bc06834822e5867ae7d1180acc3ab4a8a/apacheds-xdbm-partition-2.0.0-M24-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-xdbm-partition/2.0.0-M24/704c9f3bc06834822e5867ae7d1180acc3ab4a8a/apacheds-xdbm-partition-2.0.0-M24-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

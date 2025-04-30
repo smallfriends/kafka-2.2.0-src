@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.directory.server:apacheds-interceptors-changelog:2.0.0-M24">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-changelog/2.0.0-M24/865b5b43a0a10b1ca98b0474650f38b98078c71c/apacheds-interceptors-changelog-2.0.0-M24.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-changelog/2.0.0-M24/865b5b43a0a10b1ca98b0474650f38b98078c71c/apacheds-interceptors-changelog-2.0.0-M24.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-changelog/2.0.0-M24/a4271cd59f0bc773c8adf4314aaf3a2b47099a64/apacheds-interceptors-changelog-2.0.0-M24-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-changelog/2.0.0-M24/a4271cd59f0bc773c8adf4314aaf3a2b47099a64/apacheds-interceptors-changelog-2.0.0-M24-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

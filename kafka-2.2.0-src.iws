@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="eef35eb9-f06a-4d21-984c-4647d178f836" name="Default Changelist" comment="" />
+    <list default="true" id="eef35eb9-f06a-4d21-984c-4647d178f836" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/kafka-2.2.0-src.ipr" beforeDir="false" afterPath="$PROJECT_DIR$/kafka-2.2.0-src.ipr" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kafka-2.2.0-src.iws" beforeDir="false" afterPath="$PROJECT_DIR$/kafka-2.2.0-src.iws" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -50,6 +53,17 @@
     <breakpoint_rules converted="true" />
     <ui_properties converted="true" />
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
   <component name="ModuleEditorState">
     <option name="LAST_EDITED_MODULE_NAME" />
     <option name="LAST_EDITED_TAB_NAME" />
@@ -83,6 +97,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
   </component>
   <component name="RebelAgentSelection">
     <selection>jr</selection>
@@ -162,6 +177,15 @@
       <option name="presentableId" value="Default" />
       <updated>1641107655873</updated>
       <workItem from="1641107658181" duration="98000" />
+      <workItem from="1698646158611" duration="4441000" />
+      <workItem from="1698717600204" duration="3865000" />
+      <workItem from="1699005668954" duration="604000" />
+      <workItem from="1699249715012" duration="5874000" />
+      <workItem from="1699843537582" duration="1189000" />
+      <workItem from="1700115762402" duration="592000" />
+      <workItem from="1700442686559" duration="594000" />
+      <workItem from="1700444688691" duration="594000" />
+      <workItem from="1700532210766" duration="594000" />
     </task>
     <servers />
   </component>

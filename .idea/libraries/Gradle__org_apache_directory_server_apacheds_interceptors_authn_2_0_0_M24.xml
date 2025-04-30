@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.directory.server:apacheds-interceptors-authn:2.0.0-M24">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-authn/2.0.0-M24/85fd27a911b089ff758f21c33d86781f75b3ee89/apacheds-interceptors-authn-2.0.0-M24.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-authn/2.0.0-M24/85fd27a911b089ff758f21c33d86781f75b3ee89/apacheds-interceptors-authn-2.0.0-M24.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-authn/2.0.0-M24/a3c2e5f0f4ee3e4c0bd306c6a58075ee4c18a6e/apacheds-interceptors-authn-2.0.0-M24-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-interceptors-authn/2.0.0-M24/a3c2e5f0f4ee3e4c0bd306c6a58075ee4c18a6e/apacheds-interceptors-authn-2.0.0-M24-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

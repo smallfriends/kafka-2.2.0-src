@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.directory.server:apacheds-kerberos-codec:2.0.0-M24">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-kerberos-codec/2.0.0-M24/9219f9bb1e779ba0f56b8060dce161dbf78d45e2/apacheds-kerberos-codec-2.0.0-M24.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-kerberos-codec/2.0.0-M24/9219f9bb1e779ba0f56b8060dce161dbf78d45e2/apacheds-kerberos-codec-2.0.0-M24.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-kerberos-codec/2.0.0-M24/4da698af96f9337d00a48ac07e73a2b0170a617/apacheds-kerberos-codec-2.0.0-M24-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-kerberos-codec/2.0.0-M24/4da698af96f9337d00a48ac07e73a2b0170a617/apacheds-kerberos-codec-2.0.0-M24-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.directory.server:apacheds-ldif-partition:2.0.0-M24">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-ldif-partition/2.0.0-M24/9ce916675ac1a5075b408e752c83b7324ad31e2/apacheds-ldif-partition-2.0.0-M24.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-ldif-partition/2.0.0-M24/9ce916675ac1a5075b408e752c83b7324ad31e2/apacheds-ldif-partition-2.0.0-M24.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-ldif-partition/2.0.0-M24/a3ab9a03a3aa0c2b3d792a856cbedf7fcdb7acc3/apacheds-ldif-partition-2.0.0-M24-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-ldif-partition/2.0.0-M24/a3ab9a03a3aa0c2b3d792a856cbedf7fcdb7acc3/apacheds-ldif-partition-2.0.0-M24-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

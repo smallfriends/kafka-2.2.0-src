@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.directory.server:apacheds-protocol-shared:2.0.0-M24">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-protocol-shared/2.0.0-M24/d7e2cb9df05fb0833442a8228275c47eddf0f415/apacheds-protocol-shared-2.0.0-M24.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-protocol-shared/2.0.0-M24/d7e2cb9df05fb0833442a8228275c47eddf0f415/apacheds-protocol-shared-2.0.0-M24.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-protocol-shared/2.0.0-M24/25203c430201e62f25b4d1c4059187300e2e3183/apacheds-protocol-shared-2.0.0-M24-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-protocol-shared/2.0.0-M24/25203c430201e62f25b4d1c4059187300e2e3183/apacheds-protocol-shared-2.0.0-M24-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

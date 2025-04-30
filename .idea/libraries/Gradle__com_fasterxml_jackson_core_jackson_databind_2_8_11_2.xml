@@ -4,11 +4,11 @@
       <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/externalAnnotations/com/fasterxml/jackson/core/jackson-databind/2.9.6-an1/jackson-databind-2.9.6-an1-annotations.zip!/" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.8.11.2/2c5051e8e84d2c16316b758ebf746f9e90bef5a4/jackson-databind-2.8.11.2.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.8.11.2/2c5051e8e84d2c16316b758ebf746f9e90bef5a4/jackson-databind-2.8.11.2.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.8.11.2/48264b5cd9206472c8ad6a0442c8acfcff1188e6/jackson-databind-2.8.11.2-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.8.11.2/48264b5cd9206472c8ad6a0442c8acfcff1188e6/jackson-databind-2.8.11.2-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

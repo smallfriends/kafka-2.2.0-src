@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.directory.server:apacheds-mavibot-partition:2.0.0-M24">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-mavibot-partition/2.0.0-M24/e63f7a9c8ecc956b4fd3e7458ed9e97a70ab953e/apacheds-mavibot-partition-2.0.0-M24.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-mavibot-partition/2.0.0-M24/e63f7a9c8ecc956b4fd3e7458ed9e97a70ab953e/apacheds-mavibot-partition-2.0.0-M24.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-mavibot-partition/2.0.0-M24/5b3370afa3a20767d0d8173250e78245b4ef16ed/apacheds-mavibot-partition-2.0.0-M24-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.directory.server/apacheds-mavibot-partition/2.0.0-M24/5b3370afa3a20767d0d8173250e78245b4ef16ed/apacheds-mavibot-partition-2.0.0-M24-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.apache.servicemix.bundles:org.apache.servicemix.bundles.xpp3:1.1.4c_7">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/1.1.4c_7/5200d5cddccc804c6e321dbf828d1f9efbf9daea/org.apache.servicemix.bundles.xpp3-1.1.4c_7.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/1.1.4c_7/5200d5cddccc804c6e321dbf828d1f9efbf9daea/org.apache.servicemix.bundles.xpp3-1.1.4c_7.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../Software/gradle/caches/modules-2/files-2.1/org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/1.1.4c_7/e18e7e87f1d3b11522c5a4b36678aec49310bba9/org.apache.servicemix.bundles.xpp3-1.1.4c_7-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/1.1.4c_7/e18e7e87f1d3b11522c5a4b36678aec49310bba9/org.apache.servicemix.bundles.xpp3-1.1.4c_7-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
