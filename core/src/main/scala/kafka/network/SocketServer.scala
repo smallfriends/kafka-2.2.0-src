@@ -212,6 +212,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
 
   private def createDataPlaneAcceptorsAndProcessors(dataProcessorsPerListener: Int,
                                                     endpoints: Seq[EndPoint]): Unit = synchronized {
+    //server.property，endpoint:kafka1:9092
     endpoints.foreach { endpoint =>
       val dataPlaneAcceptor = createAcceptor(endpoint, DataPlaneMetricPrefix)
       addDataPlaneProcessors(dataPlaneAcceptor, endpoint, dataProcessorsPerListener)
@@ -243,6 +244,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
     val sendBufferSize = config.socketSendBufferBytes
     val recvBufferSize = config.socketReceiveBufferBytes
     val brokerId = config.brokerId
+    //核心的线程：acceptor线程
     new Acceptor(endPoint, sendBufferSize, recvBufferSize, brokerId, connectionQuotas, metricPrefix)
   }
 
@@ -495,21 +497,33 @@ private[kafka] class Acceptor(val endPoint: EndPoint,
    * Accept loop that checks for new connection attempts
    */
   def run() {
+    /**
+     * Kafka
+     *    NIO网络通信
+     *    客户端：
+     *    服务端：serverChannel
+     *
+     * */
     serverChannel.register(nioSelector, SelectionKey.OP_ACCEPT)
     startupComplete()
     try {
       var currentProcessorIndex = 0
       while (isRunning) {
         try {
+          //selector查看是否有事件注册上来
           val ready = nioSelector.select(500)
           if (ready > 0) {
+            //获取到key
             val keys = nioSelector.selectedKeys()
+            //遍历所有注册上来的key
             val iter = keys.iterator()
             while (iter.hasNext && isRunning) {
               try {
                 val key = iter.next
                 iter.remove()
+                //如果是客户端发送过来要进行网络连接的请求
                 if (key.isAcceptable) {
+                  //到这个方法里面去处理
                   accept(key).foreach { socketChannel =>
 
                     // Assign the channel to the next processor (using round-robin) to which the

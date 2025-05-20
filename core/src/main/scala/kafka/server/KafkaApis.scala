@@ -105,6 +105,13 @@ class KafkaApis(val requestChannel: RequestChannel,
       trace(s"Handling request:${request.requestDesc(true)} from connection ${request.context.connectionId};" +
         s"securityProtocol:${request.context.securityProtocol},principal:${request.context.principal}")
       request.header.apiKey match {
+        //根据请求头部信息中的apiKey字段判断处于哪类请求
+        //然后调用响应的handle***方法
+        //如果新增PRC协议类型，则：
+        //1.添加新的apiKey标识新请求类型
+        //2.添加新的case分支
+        //3.添加对应的handle***方法
+
         //处理生产者发送过来的请求
         case ApiKeys.PRODUCE => handleProduceRequest(request)
         //我们知道follower发送过来拉取数据的请求（同步数据）；消费者消费数据的请求
@@ -155,9 +162,12 @@ class KafkaApis(val requestChannel: RequestChannel,
         case ApiKeys.ELECT_PREFERRED_LEADERS => handleElectPreferredReplicaLeader(request)
       }
     } catch {
+      //如果是严重错误，则抛出异常
       case e: FatalExitError => throw e
+      //普通异常的话，记录下错误日志
       case e: Throwable => handleError(request, e)
     } finally {
+      //记录一下请求本地完成时间，即Broker处理完该请求的时间
       request.apiLocalCompleteTimeNanos = time.nanoseconds
     }
   }
