@@ -245,6 +245,8 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
     val recvBufferSize = config.socketReceiveBufferBytes
     val brokerId = config.brokerId
     //核心的线程：acceptor线程
+    //scala里面有一个函数：主构造函数
+    //我们new一个类，会让这个类的主构造函数执行一遍
     new Acceptor(endPoint, sendBufferSize, recvBufferSize, brokerId, connectionQuotas, metricPrefix)
   }
 
@@ -253,6 +255,8 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
     val securityProtocol = endpoint.securityProtocol
     val listenerProcessors = new ArrayBuffer[Processor]()
     for (_ <- 0 until newProcessorsPerListener) {
+      //说明这个里面会创建3个processor线程
+      //默认是3个线程，但是我们一般搭建kafka集群的时候会去配置这个参数
       val processor = newProcessor(nextProcessorId, dataPlaneRequestChannel, connectionQuotas, listenerName, securityProtocol, memoryPool)
       listenerProcessors += processor
       dataPlaneRequestChannel.addProcessor(processor)
@@ -344,6 +348,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
   // `protected` for test usage
   protected[network] def newProcessor(id: Int, requestChannel: RequestChannel, connectionQuotas: ConnectionQuotas, listenerName: ListenerName,
                                       securityProtocol: SecurityProtocol, memoryPool: MemoryPool): Processor = {
+    //创建线程
     new Processor(id,
       time,
       config.socketRequestMaxBytes,
@@ -594,9 +599,12 @@ private[kafka] class Acceptor(val endPoint: EndPoint,
    * Accept a new connection
    */
   private def accept(key: SelectionKey): Option[SocketChannel] = {
+    //根据selectKey获取到ServerSocketChannel
     val serverSocketChannel = key.channel().asInstanceOf[ServerSocketChannel]
+    //获取到一个socketChannel
     val socketChannel = serverSocketChannel.accept()
     try {
+      //设置socketChannel各种参数
       connectionQuotas.inc(socketChannel.socket().getInetAddress)
       socketChannel.configureBlocking(false)
       socketChannel.socket().setTcpNoDelay(true)
@@ -613,6 +621,7 @@ private[kafka] class Acceptor(val endPoint: EndPoint,
   }
 
   private def assignNewConnection(socketChannel: SocketChannel, processor: Processor, mayBlock: Boolean): Boolean = {
+    //processor调用accept方法
     if (processor.accept(socketChannel, mayBlock, blockedPercentMeter)) {
       debug(s"Accepted connection from ${socketChannel.socket.getRemoteSocketAddress} on" +
         s" ${socketChannel.socket.getLocalSocketAddress} and assigned it to processor ${processor.id}," +
@@ -983,6 +992,7 @@ private[kafka] class Processor(val id: Int,
              mayBlock: Boolean,
              acceptorIdlePercentMeter: com.yammer.metrics.core.Meter): Boolean = {
     val accepted = {
+      //把获取到的SocketChannel存入到自己的队列里面
       if (newConnections.offer(socketChannel))
         true
       else if (mayBlock) {
