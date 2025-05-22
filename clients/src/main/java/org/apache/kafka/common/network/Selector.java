@@ -611,11 +611,13 @@ public class Selector implements Selectable, AutoCloseable {
                     () -> channelStartTimeNanos != 0 ? channelStartTimeNanos : currentTimeNanos)) {
                     Send send;
                     try {
+                        //里面如果我们发现消息被发送出去了，然后移除OP_WRITE
                         send = channel.write();
                     } catch (Exception e) {
                         sendFailed = true;
                         throw e;
                     }
+                    //已经完成响应消息的发送
                     if (send != null) {
                         this.completedSends.add(send);
                         this.sensors.recordBytesSent(channel.id(), send.size());
