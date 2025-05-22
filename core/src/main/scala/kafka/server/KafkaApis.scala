@@ -112,6 +112,8 @@ class KafkaApis(val requestChannel: RequestChannel,
         //2.添加新的case分支
         //3.添加对应的handle***方法
 
+        //因为我们使用的场景驱动的方式去分析的源码
+        //分析过生产者那发送过来的请求
         //处理生产者发送过来的请求
         case ApiKeys.PRODUCE => handleProduceRequest(request)
         //我们知道follower发送过来拉取数据的请求（同步数据）；消费者消费数据的请求
@@ -433,7 +435,9 @@ class KafkaApis(val requestChannel: RequestChannel,
     //封装有权限请求数据的对象
     val authorizedRequestInfo = mutable.Map[TopicPartition, MemoryRecords]()
 
-    //遍历
+    //按照分区的方式去遍历数据，前面生产者源码中可以知道发到Broker中的数据是按照分区进行打包的，所以这里遍历分区进行拆解
+    //对对方发送过来的数据进行一些判断
+    //主要就是针对权限之类的事进行判断
     for ((topicPartition, memoryRecords) <- produceRequest.partitionRecordsOrFail.asScala) {
       //topic没有授权
       if (!authorize(request.session, Write, Resource(Topic, topicPartition.topic, LITERAL)))
@@ -444,7 +448,8 @@ class KafkaApis(val requestChannel: RequestChannel,
       else
         try {
           ProduceRequest.validateRecords(request.header.apiVersion(), memoryRecords)
-          //正产授权,并且存在的topic请求数据
+          //正常授权,并且存在的topic请求数据
+          //经过前面代码的层层判断，最终我们需要处理的数据都是在authorizedRequestInfo对象里面
           authorizedRequestInfo += (topicPartition -> memoryRecords)
         } catch {
           case e: ApiException =>
@@ -453,6 +458,7 @@ class KafkaApis(val requestChannel: RequestChannel,
     }
 
     // the callback for sending a produce response
+    //客户端请求的回调
     def sendResponseCallback(responseStatus: Map[TopicPartition, PartitionResponse]) {
       val mergedResponseStatus = responseStatus ++ unauthorizedTopicResponses ++ nonExistingTopicResponses ++ invalidRequestResponses
       var errorInResponse = false
@@ -1751,7 +1757,9 @@ class KafkaApis(val requestChannel: RequestChannel,
           val endTxnMarker = new EndTransactionMarker(controlRecordType, marker.coordinatorEpoch)
           partition -> MemoryRecords.withEndTransactionMarker(producerId, marker.producerEpoch, endTxnMarker)
         }.toMap
-
+        /**
+         * 把接收到的数据追加到磁盘上面
+         * */
         replicaManager.appendRecords(
           timeout = config.requestTimeoutMs.toLong,
           requiredAcks = -1,
@@ -2415,10 +2423,12 @@ class KafkaApis(val requestChannel: RequestChannel,
 
     val response = responseOpt match {
       case Some(response) =>
+        //封装一个请求体
         val responseSend = request.context.buildResponse(response)
         val responseString =
           if (RequestChannel.isRequestLoggingEnabled) Some(response.toString(request.context.apiVersion))
           else None
+        //封装了一个Response的对象，这个对象就是服务端发送回客户端生产者的
         new RequestChannel.SendResponse(request, responseSend, responseString, onComplete)
       case None =>
         new RequestChannel.NoOpResponse(request)

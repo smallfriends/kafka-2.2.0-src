@@ -341,8 +341,10 @@ class RequestChannel(val queueSize: Int, val metricNamePrefix : String) extends 
   }
 
   /** Get the next request or block until specified time has elapsed */
-  def receiveRequest(timeout: Long): RequestChannel.BaseRequest =
+  def receiveRequest(timeout: Long): RequestChannel.BaseRequest = {
+    //从队列里面获取Request对象
     requestQueue.poll(timeout, TimeUnit.MILLISECONDS)
+  }
 
   /** Get the next request or block until there is one */
   def receiveRequest(): RequestChannel.BaseRequest =

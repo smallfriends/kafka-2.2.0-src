@@ -108,6 +108,7 @@ public class Selector implements Selectable, AutoCloseable {
     private final Set<KafkaChannel> explicitlyMutedChannels;
     private boolean outOfMemory;
     private final List<Send> completedSends;
+    //已经接收到的，并且处理完了的响应
     private final List<NetworkReceive> completedReceives;
     //已经接收完成还没处理的响应，一个KafkaChannel对应一个队列，一个队列对应一个连接，一个连接会有很多响应
     private final Map<KafkaChannel, Deque<NetworkReceive>> stagedReceives;
@@ -331,7 +332,7 @@ public class Selector implements Selectable, AutoCloseable {
      */
     public void register(String id, SocketChannel socketChannel) throws IOException {
         ensureNotRegistered(id);
-        //向自己的Selector注册OP_READ事件,接下来Processor线程就可以读取客户端发送过来的连接了
+        //向Processor自己的Selector注册OP_READ事件,接下来Processor线程就可以读取客户端发送过来的连接了
         registerChannel(id, socketChannel, SelectionKey.OP_READ);
         this.sensors.connectionCreated.record();
     }
@@ -523,6 +524,7 @@ public class Selector implements Selectable, AutoCloseable {
 
         // Add to completedReceives after closing expired connections to avoid removing
         // channels with completed receives until all staged receives are completed.
+        //对stagedReceives里面的数据要进行处理
         addToCompletedReceives();
     }
 
@@ -984,10 +986,12 @@ public class Selector implements Selectable, AutoCloseable {
      * adds a receive to staged receives
      */
     private void addToStagedReceives(KafkaChannel channel, NetworkReceive receive) {
+        //channel代表的就是一个网络连接，一台kafka的主机就对应了一个channel连接
         if (!stagedReceives.containsKey(channel))
             stagedReceives.put(channel, new ArrayDeque<>());
 
         Deque<NetworkReceive> deque = stagedReceives.get(channel);
+        //往队列里面存放接收到的响应
         deque.add(receive);
     }
 
@@ -1011,7 +1015,10 @@ public class Selector implements Selectable, AutoCloseable {
     }
 
     private void addToCompletedReceives(KafkaChannel channel, Deque<NetworkReceive> stagedDeque) {
+        //客户端从这里获取到相应
+        //对于kafka服务端来说，这儿是接收到的请求
         NetworkReceive networkReceive = stagedDeque.poll();
+        //把相应存入到completeReceives数据结构里面
         this.completedReceives.add(networkReceive);
         this.sensors.recordBytesReceived(channel.id(), networkReceive.size());
     }
