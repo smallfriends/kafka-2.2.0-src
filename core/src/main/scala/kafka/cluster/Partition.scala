@@ -737,9 +737,11 @@ class Partition(val topicPartition: TopicPartition,
   }
 
   def appendRecordsToLeader(records: MemoryRecords, isFromClient: Boolean, requiredAcks: Int = 0): LogAppendInfo = {
+    //获取leader partition
     val (info, leaderHWIncremented) = inReadLock(leaderIsrUpdateLock) {
       leaderReplicaIfLocal match {
         case Some(leaderReplica) =>
+          //获取到log对象
           val log = leaderReplica.log.get
           val minIsr = log.config.minInSyncReplicas
           val inSyncSize = inSyncReplicas.size
@@ -749,7 +751,7 @@ class Partition(val topicPartition: TopicPartition,
             throw new NotEnoughReplicasException(s"The size of the current ISR ${inSyncReplicas.map(_.brokerId)} " +
               s"is insufficient to satisfy the min.isr requirement of $minIsr for partition $topicPartition")
           }
-
+          //使用log对象去写数据
           val info = log.appendAsLeader(records, leaderEpoch = this.leaderEpoch, isFromClient,
             interBrokerProtocolVersion)
 

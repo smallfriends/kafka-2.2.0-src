@@ -825,6 +825,7 @@ class Log(@volatile var dir: File,
    */
   private def append(records: MemoryRecords, isFromClient: Boolean, interBrokerProtocolVersion: ApiVersion, assignOffsets: Boolean, leaderEpoch: Int): LogAppendInfo = {
     maybeHandleIOException(s"Error while appending records to $topicPartition in dir ${dir.getParent}") {
+      //步骤一：校验数据（Producer ——> Kafka）
       val appendInfo = analyzeAndValidateRecords(records, isFromClient = isFromClient)
 
       // return if we have no valid messages or if this is a duplicate of the last appended entry
@@ -839,6 +840,7 @@ class Log(@volatile var dir: File,
         checkIfMemoryMappedBufferClosed()
         if (assignOffsets) {
           // assign offsets to the message set
+          //步骤二：分配offset
           val offset = new LongRef(nextOffsetMetadata.messageOffset)
           appendInfo.firstOffset = Some(offset.value)
           val now = time.milliseconds
@@ -860,6 +862,7 @@ class Log(@volatile var dir: File,
             case e: IOException =>
               throw new KafkaException(s"Error validating messages while appending to log $name", e)
           }
+          //步骤三：获取合法的数据
           validRecords = validateAndOffsetAssignResult.validatedRecords
           appendInfo.maxTimestamp = validateAndOffsetAssignResult.maxTimestamp
           appendInfo.offsetOfMaxTimestamp = validateAndOffsetAssignResult.shallowOffsetOfMaxTimestamp
@@ -931,6 +934,7 @@ class Log(@volatile var dir: File,
         }
 
         // maybe roll the log if this segment is full
+        //步骤四：获取一个可用的segment
         val segment = maybeRoll(validRecords.sizeInBytes, appendInfo)
 
         val logOffsetMetadata = LogOffsetMetadata(
@@ -938,6 +942,7 @@ class Log(@volatile var dir: File,
           segmentBaseOffset = segment.baseOffset,
           relativePositionInSegment = segment.size)
 
+        //步骤五：把数据写入到segment里面去
         segment.append(largestOffset = appendInfo.lastOffset,
           largestTimestamp = appendInfo.maxTimestamp,
           shallowOffsetOfMaxTimestamp = appendInfo.offsetOfMaxTimestamp,
@@ -961,6 +966,7 @@ class Log(@volatile var dir: File,
         producerStateManager.updateMapEndOffset(appendInfo.lastOffset + 1)
 
         // increment the log end offset
+        //步骤六：更新LEO
         updateLogEndOffset(appendInfo.lastOffset + 1)
 
         // update the first unstable offset (which is used to compute LSO)
@@ -971,6 +977,7 @@ class Log(@volatile var dir: File,
           s"next offset: ${nextOffsetMetadata.messageOffset}, " +
           s"and messages: $validRecords")
 
+        //步骤七：根据条件判断，然后把内存里面的数据写到磁盘上面
         if (unflushedMessages >= config.flushInterval)
           flush()
 
@@ -1506,6 +1513,7 @@ class Log(@volatile var dir: File,
    */
   def deleteOldSegments(): Int = {
     if (config.delete) {
+      //满足任一条件就开始删除
       deleteRetentionMsBreachedSegments() + deleteRetentionSizeBreachedSegments() + deleteLogStartOffsetBreachedSegments()
     } else {
       deleteLogStartOffsetBreachedSegments()
@@ -1515,6 +1523,9 @@ class Log(@volatile var dir: File,
   private def deleteRetentionMsBreachedSegments(): Int = {
     if (config.retentionMs < 0) return 0
     val startMs = time.milliseconds
+    //根据时间周期来删除文件，也就是这里判断时间周期，当前时间减去最新的时间大于保留时间
+    //如果超出时间周期，就把对应时间给删除
+    //默认值是7天
     deleteOldSegments((segment, _) => startMs - segment.largestTimestamp > config.retentionMs,
       reason = s"retention time ${config.retentionMs}ms breach")
   }
@@ -1522,6 +1533,7 @@ class Log(@volatile var dir: File,
   private def deleteRetentionSizeBreachedSegments(): Int = {
     if (config.retentionSize < 0 || size < config.retentionSize) return 0
     var diff = size - config.retentionSize
+    //根据分区大小来删除文件
     def shouldDelete(segment: LogSegment, nextSegmentOpt: Option[LogSegment]) = {
       if (diff - segment.size >= 0) {
         diff -= segment.size

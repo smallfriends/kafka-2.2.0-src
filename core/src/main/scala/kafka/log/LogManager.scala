@@ -69,6 +69,7 @@ class LogManager(logDirs: Seq[File],
   val InitialTaskDelayMs = 30 * 1000
 
   private val logCreationOrDeletionLock = new Object
+  //我们可以得出这样一个结论，一个分区（磁盘上面的一个目录test-1）对应一个Log
   private val currentLogs = new Pool[TopicPartition, Log]()
   // Future logs are put in the directory with "-future" suffix. Future log is created when user wants to move replica
   // from one log directory to another log directory on the same broker. The directory of the future log will be renamed
@@ -108,6 +109,7 @@ class LogManager(logDirs: Seq[File],
     logDirsSet
   }
 
+  //核心函数，加载日志
   loadLogs()
 
   // public, so we can access this from kafka.admin.DeleteTopicTest
@@ -146,6 +148,7 @@ class LogManager(logDirs: Seq[File],
     val liveLogDirs = new ConcurrentLinkedQueue[File]()
     val canonicalPaths = mutable.HashSet.empty[String]
 
+    //遍历所有我们配置的目录
     for (dir <- dirs) {
       try {
         if (initialOfflineDirs.contains(dir))
@@ -153,6 +156,7 @@ class LogManager(logDirs: Seq[File],
 
         if (!dir.exists) {
           info(s"Log directory ${dir.getAbsolutePath} not found, creating it.")
+          //遍历所有我们配置的目录
           val created = dir.mkdirs()
           if (!created)
             throw new IOException(s"Failed to create data directory ${dir.getAbsolutePath}")
@@ -305,7 +309,10 @@ class LogManager(logDirs: Seq[File],
     val offlineDirs = mutable.Set.empty[(String, IOException)]
     val jobs = mutable.Map.empty[File, Seq[Future[_]]]
 
+    //遍历所有的目录（配置的存储日志的目录）
     for (dir <- liveLogDirs) {
+      //为每个目录都创建一个线程池
+      //启动线程池里面的线程去加载Log
       try {
         val pool = Executors.newFixedThreadPool(numRecoveryThreadsPerDataDir)
         threadPools.append(pool)
@@ -338,10 +345,12 @@ class LogManager(logDirs: Seq[File],
 
         val jobsForDir = for {
           dirContent <- Option(dir.listFiles).toList
+          //TODO 目前这里的LogDir代表的就是一个分区的目录
           logDir <- dirContent if logDir.isDirectory
         } yield {
           CoreUtils.runnable {
             try {
+              //加载目录下的数据信息
               loadLog(logDir, recoveryPoints, logStartOffsets)
             } catch {
               case e: IOException =>
@@ -388,31 +397,42 @@ class LogManager(logDirs: Seq[File],
    *  Start the background threads to flush logs and do log cleanup
    */
   def startup() {
+    //定时调度了5个任务
     /* Schedule the cleanup task to delete old logs */
     if (scheduler != null) {
+      //定时检查文件，清理过期的文件
       info("Starting log cleanup with a period of %d ms.".format(retentionCheckMs))
       scheduler.schedule("kafka-log-retention",
                          cleanupLogs _,
                          delay = InitialTaskDelayMs,
                          period = retentionCheckMs,
                          TimeUnit.MILLISECONDS)
+      //定时把内存里面的数据刷写到磁盘
       info("Starting log flusher with a default period of %d ms.".format(flushCheckMs))
       scheduler.schedule("kafka-log-flusher",
                          flushDirtyLogs _,
                          delay = InitialTaskDelayMs,
                          period = flushCheckMs,
                          TimeUnit.MILLISECONDS)
+      //定时更新一个检查点文件
+      //kafka服务有时候会涉及重启
+      //重启应该要恢复哪些数据
+      //其实这儿会定时更新一个检查点文件->服务于kafka服务重启的时候恢复数据使用
+      //定时把检查点的信息写到磁盘上面
       scheduler.schedule("kafka-recovery-point-checkpoint",
                          checkpointLogRecoveryOffsets _,
                          delay = InitialTaskDelayMs,
                          period = flushRecoveryOffsetCheckpointMs,
                          TimeUnit.MILLISECONDS)
+      //
       scheduler.schedule("kafka-log-start-offset-checkpoint",
                          checkpointLogStartOffsets _,
                          delay = InitialTaskDelayMs,
                          period = flushStartOffsetCheckpointMs,
                          TimeUnit.MILLISECONDS)
-      scheduler.schedule("kafka-delete-logs", // will be rescheduled after each delete logs with a dynamic period
+      //will be rescheduled after each delete logs with a dynamic period
+      //
+      scheduler.schedule("kafka-delete-logs",
                          deleteLogs _,
                          delay = InitialTaskDelayMs,
                          unit = TimeUnit.MILLISECONDS)
@@ -910,12 +930,14 @@ class LogManager(logDirs: Seq[File],
       deletableLogs.foreach {
         case (topicPartition, log) =>
           debug(s"Garbage collecting '${log.name}'")
+          //删除满足删除条件的文件
           total += log.deleteOldSegments()
 
           val futureLog = futureLogs.get(topicPartition)
           if (futureLog != null) {
             // clean future logs
             debug(s"Garbage collecting future log '${futureLog.name}'")
+            //删除满足删除条件的文件
             total += futureLog.deleteOldSegments()
           }
       }
@@ -968,6 +990,10 @@ class LogManager(logDirs: Seq[File],
         val timeSinceLastFlush = time.milliseconds - log.lastFlushTime
         debug(s"Checking if flush is needed on ${topicPartition.topic} flush interval ${log.config.flushMs}" +
               s" last flushed ${log.lastFlushTime} time since last flush: $timeSinceLastFlush")
+        //按照一定的频率
+        //我们溯源发现kafka默认值是long的最大值，我们可以修改这个值
+        //也就是kafka这儿是不会主动的把内存里面的数据刷写到磁盘
+        //把内存里面的数据刷写到磁盘这个操作是由操作系统完成的
         if(timeSinceLastFlush >= log.config.flushMs)
           log.flush
       } catch {
@@ -1001,6 +1027,9 @@ object LogManager {
 
     val cleanerConfig = LogCleaner.cleanerConfig(config)
 
+    //创建对象
+    //log.dirs
+    //scala代码里面，我们new一个对象的时候，就会调用这个类的主构造函数
     new LogManager(logDirs = config.logDirs.map(new File(_).getAbsoluteFile),
       initialOfflineDirs = initialOfflineDirs.map(new File(_).getAbsoluteFile),
       topicConfigs = topicConfigs,
