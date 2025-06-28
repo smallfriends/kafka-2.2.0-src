@@ -171,6 +171,7 @@ public class FileRecords extends AbstractRecords implements Closeable {
      * Commit all written data to the physical disk
      */
     public void flush() throws IOException {
+        //调用javaNIO的方法，强制把数据从内存中刷写到磁盘
         channel.force(true);
     }
 

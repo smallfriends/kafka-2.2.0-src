@@ -471,6 +471,7 @@ class LogSegment private[log] (val log: FileRecords,
   @threadsafe
   def flush() {
     LogFlushStats.logFlushTimer.time {
+      //最主要关心的是这个
       log.flush()
       offsetIndex.flush()
       timeIndex.flush()

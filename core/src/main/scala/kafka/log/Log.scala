@@ -979,8 +979,11 @@ class Log(@volatile var dir: File,
           s"and messages: $validRecords")
 
         //步骤七：根据条件判断，然后把内存里面的数据写到磁盘上面
-        if (unflushedMessages >= config.flushInterval)
+        if (unflushedMessages >= config.flushInterval) {
+          //将刷盘的操作交给操作系统，操作系统来管理定期把数据写到磁盘上面
+          //我们也可以配置刷写磁盘的频率，通过kafka的配置文件
           flush()
+        }
 
         appendInfo
       }
@@ -1715,8 +1718,11 @@ class Log(@volatile var dir: File,
         return
       debug(s"Flushing log up to offset $offset, last flushed: $lastFlushTime,  current time: ${time.milliseconds()}, " +
         s"unflushed: $unflushedMessages")
-      for (segment <- logSegments(this.recoveryPoint, offset))
+      //遍历当前主机的所有segment
+      for (segment <- logSegments(this.recoveryPoint, offset)) {
+        //调用flush的方法
         segment.flush()
+      }
 
       lock synchronized {
         checkIfMemoryMappedBufferClosed()
