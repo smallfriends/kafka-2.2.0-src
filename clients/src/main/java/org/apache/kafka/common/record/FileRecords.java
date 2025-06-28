@@ -161,6 +161,7 @@ public class FileRecords extends AbstractRecords implements Closeable {
             throw new IllegalArgumentException("Append of size " + records.sizeInBytes() +
                     " bytes is too large for segment with current file position at " + size.get());
 
+        //关键写数据的代码
         int written = records.writeFullyTo(channel);
         size.getAndAdd(written);
         return written;

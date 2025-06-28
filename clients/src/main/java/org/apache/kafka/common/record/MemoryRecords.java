@@ -84,10 +84,15 @@ public class MemoryRecords extends AbstractRecords {
      * @throws IOException For any IO errors writing to the channel
      */
     public int writeFullyTo(GatheringByteChannel channel) throws IOException {
+        //标记一下position的位置
         buffer.mark();
         int written = 0;
+        //如果数据没写完，就一直写就可以了
         while (written < sizeInBytes())
+            //通过调用fileChannel去写数据
+            //又是java NIO里面的知识，如果java NIO不太会，一定要去学一下
             written += channel.write(buffer);
+        //恢复之前标记position的位置
         buffer.reset();
         return written;
     }
