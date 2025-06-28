@@ -276,6 +276,7 @@ class Log(@volatile var dir: File,
   @volatile private var replicaHighWatermark: Option[Long] = None
 
   /* the actual segments of the log */
+  //跳表结构，快速找到对应的数据段
   private val segments: ConcurrentNavigableMap[java.lang.Long, LogSegment] = new ConcurrentSkipListMap[java.lang.Long, LogSegment]
 
   // Visible for testing

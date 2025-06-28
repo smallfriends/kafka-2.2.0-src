@@ -135,6 +135,7 @@ class LogSegment private[log] (val log: FileRecords,
       ensureOffsetInRange(largestOffset)
 
       // append the messages
+      //写数据到磁盘（内存）
       val appendedBytes = log.append(records)
       trace(s"Appended $appendedBytes to ${log.file} at end offset $largestOffset")
       // Update the in memory max timestamp and corresponding offset.
@@ -143,11 +144,19 @@ class LogSegment private[log] (val log: FileRecords,
         offsetOfMaxTimestamp = shallowOffsetOfMaxTimestamp
       }
       // append an entry to the index (if needed)
+      //写索引数据
+      //这儿有一个条件，不是来一条数据就写一条索引
+      //而是达到一定的条件才回去写索引，所以我们管这样的索引叫：稀疏索引
+      //当我们写数据，写了4096字节的时候会写一条索引
       if (bytesSinceLastIndexEntry > indexIntervalBytes) {
+        //这个是比较重要的
         offsetIndex.append(largestOffset, physicalPosition)
+        //这个我们一般用不到，所以我们目前不关注
         timeIndex.maybeAppend(maxTimestampSoFar, offsetOfMaxTimestamp)
+        //写完一条索引后，又重新开始计算
         bytesSinceLastIndexEntry = 0
       }
+      //当前消息数——>累加
       bytesSinceLastIndexEntry += records.sizeInBytes
     }
   }
