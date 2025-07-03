@@ -110,6 +110,7 @@ abstract class AbstractFetcherThread(name: String,
 
   override def doWork() {
     maybeTruncate()
+    //调用了fetch方法，里面肯定发送了网络请求给leader partition所在的服务器
     maybeFetch()
   }
 

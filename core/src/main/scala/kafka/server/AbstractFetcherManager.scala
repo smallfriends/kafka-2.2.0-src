@@ -122,6 +122,13 @@ abstract class AbstractFetcherManager[T <: AbstractFetcherThread](val name: Stri
 
   def addFetcherForPartitions(partitionAndOffsets: Map[TopicPartition, InitialFetchState]) {
     lock synchronized {
+      //分组：partition+broker = key
+      //按照key进行分区，然后去计算出来拉取的任务（线程）
+      //如果leader partition在同一个broker上面，只需要启动一个线程就可以了
+
+      //如果没有进行分组，一个follower启动一个fetch任务，一个任务对应一个thread（100个follow 100线程）
+      //f1 f2 f3 f4 -> leader partition都在kafka-1的话，一个线程就干4个分区的活
+      //很大会减少我们线程的数量
       val partitionsPerFetcher = partitionAndOffsets.groupBy { case (topicPartition, brokerAndInitialFetchOffset) =>
         BrokerAndFetcherId(brokerAndInitialFetchOffset.leader, getFetcherId(topicPartition))
       }
@@ -133,6 +140,7 @@ abstract class AbstractFetcherManager[T <: AbstractFetcherThread](val name: Stri
         fetcherThread
       }
 
+      //遍历所有的抓取任务
       for ((brokerAndFetcherId, initialFetchOffsets) <- partitionsPerFetcher) {
         val brokerIdAndFetcherId = BrokerIdAndFetcherId(brokerAndFetcherId.broker.id, brokerAndFetcherId.fetcherId)
         val fetcherThread = fetcherThreadMap.get(brokerIdAndFetcherId) match {
@@ -141,6 +149,7 @@ abstract class AbstractFetcherManager[T <: AbstractFetcherThread](val name: Stri
             currentFetcherThread
           case Some(f) =>
             f.shutdown()
+            //为每个任务都创建一个线程
             addAndStartFetcherThread(brokerAndFetcherId, brokerIdAndFetcherId)
           case None =>
             addAndStartFetcherThread(brokerAndFetcherId, brokerIdAndFetcherId)

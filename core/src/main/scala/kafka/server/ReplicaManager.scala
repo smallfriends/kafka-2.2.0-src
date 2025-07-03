@@ -184,6 +184,8 @@ class ReplicaManager(val config: KafkaConfig,
   private val allPartitions = new Pool[TopicPartition, Partition](valueFactory = Some(tp =>
     Partition(tp, time, this)))
   private val replicaStateChangeLock = new Object
+  //这个就是我们要看的核心的代码，我们主要观察
+  //follow partition是如何拉取leader partition的数据的？
   val replicaFetcherManager = createReplicaFetcherManager(metrics, time, threadNamePrefix, quotaManagers.follower)
   val replicaAlterLogDirsManager = createReplicaAlterLogDirsManager(quotaManagers.alterLogDirs, brokerTopicStats)
   private val highWatermarkCheckPointThreadStarted = new AtomicBoolean(false)
@@ -1340,6 +1342,7 @@ class ReplicaManager(val config: KafkaConfig,
           val fetchOffset = partition.localReplicaOrException.highWatermark.messageOffset
           partition.topicPartition -> InitialFetchState(leader, partition.getLeaderEpoch, fetchOffset)
         }.toMap
+        //添加follower partition去leader partition那儿拉取数据任务
         replicaFetcherManager.addFetcherForPartitions(partitionsToMakeFollowerWithLeaderAndOffset)
 
         partitionsToMakeFollower.foreach { partition =>
