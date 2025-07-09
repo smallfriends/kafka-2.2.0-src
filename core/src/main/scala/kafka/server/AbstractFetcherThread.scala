@@ -70,6 +70,7 @@ abstract class AbstractFetcherThread(name: String,
   /* callbacks to be defined in subclass */
 
   // process fetched data
+  //Ctrl+H，找到继承层次结构
   protected def processPartitionData(topicPartition: TopicPartition,
                                      fetchOffset: Long,
                                      partitionData: FetchData): Option[LogAppendInfo]
@@ -297,6 +298,7 @@ abstract class AbstractFetcherThread(name: String,
     if (responseData.nonEmpty) {
       // process fetched data
       inLock(partitionMapLock) {
+        //对结果响应的处理
         responseData.foreach { case (topicPartition, partitionData) =>
           Option(partitionStates.stateValue(topicPartition)).foreach { currentFetchState =>
             // It's possible that a partition is removed and re-added or truncated when there is a pending fetch request.
@@ -308,6 +310,7 @@ abstract class AbstractFetcherThread(name: String,
                 case Errors.NONE =>
                   try {
                     // Once we hand off the partition data to the subclass, we can't mess with it any more in this thread
+                    //TODO 核心代码，处理拉取到的数据
                     val logAppendInfoOpt = processPartitionData(topicPartition, currentFetchState.fetchOffset,
                       partitionData)
 

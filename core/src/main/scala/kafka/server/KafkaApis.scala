@@ -531,6 +531,7 @@ class KafkaApis(val requestChannel: RequestChannel,
 
       // call the replica manager to append messages to the replicas
       //把接收到的消息追加到磁盘文件中,这一块待会详细分析
+      //流程走到这里，最终数据会被写到磁盘上面
       replicaManager.appendRecords(
         timeout = produceRequest.timeout.toLong,
         requiredAcks = produceRequest.acks,

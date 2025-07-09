@@ -968,6 +968,7 @@ class Log(@volatile var dir: File,
 
         // increment the log end offset
         //步骤六：更新LEO
+        //副本拉取leader数据时，也会更新自己的LEO
         updateLogEndOffset(appendInfo.lastOffset + 1)
 
         // update the first unstable offset (which is used to compute LSO)

@@ -466,6 +466,7 @@ class Partition(val topicPartition: TopicPartition,
     val replicaId = replica.brokerId
     // No need to calculate low watermark if there is no delayed DeleteRecordsRequest
     val oldLeaderLW = if (replicaManager.delayedDeleteRecordsPurgatory.delayed > 0) lowWatermarkIfLeader else -1L
+    //最终的更新所有的replica的LEO值
     replica.updateLogReadResult(logReadResult)
     val newLeaderLW = if (replicaManager.delayedDeleteRecordsPurgatory.delayed > 0) lowWatermarkIfLeader else -1L
     // check if the LW of the partition has incremented
@@ -473,6 +474,7 @@ class Partition(val topicPartition: TopicPartition,
     val leaderLWIncremented = newLeaderLW > oldLeaderLW
     // check if we need to expand ISR to include this replica
     // if it is not in the ISR yet
+    //尝试更新LSR列表
     val leaderHWIncremented = maybeExpandIsr(replicaId, logReadResult)
 
     val result = leaderLWIncremented || leaderHWIncremented
@@ -505,9 +507,19 @@ class Partition(val topicPartition: TopicPartition,
       // check if this replica needs to be added to the ISR
       leaderReplicaIfLocal match {
         case Some(leaderReplica) =>
+          //获取到所有的Replica
           val replica = getReplica(replicaId).get
+          //获取到leader partition的HW的值
           val leaderHW = leaderReplica.highWatermark
           val fetchOffset = logReadResult.info.fetchOffsetMetadata.messageOffset
+
+          //判断一下是否要更新LSR列表
+          //!inSyncReplicas.contains(replica)如果这个replica目前不在ISR列表之中
+          //TODO： replica.logEndOffsetMetadata.offsetDiff(leaderHW) >= 0
+          //这个replica的LEO值要比leader partition的HW值要大
+          //说明这个replica已经跟leader partition数据保持同步了
+          //所以这个replica加入到ISR列表里面
+
           if (!inSyncReplicas.contains(replica) &&
              assignedReplicas.map(_.brokerId).contains(replicaId) &&
              replica.logEndOffsetMetadata.offsetDiff(leaderHW) >= 0 &&
@@ -516,11 +528,13 @@ class Partition(val topicPartition: TopicPartition,
             info(s"Expanding ISR from ${inSyncReplicas.map(_.brokerId).mkString(",")} " +
               s"to ${newInSyncReplicas.map(_.brokerId).mkString(",")}")
             // update ISR in ZK and cache
+            //就要更新ISR列表
             updateIsr(newInSyncReplicas)
             replicaManager.isrExpandRate.mark()
           }
           // check if the HW of the partition can now be incremented
           // since the replica may already be in the ISR and its LEO has just incremented
+          //TODO： 尝试更新HW的值
           maybeIncrementLeaderHW(leaderReplica, logReadResult.fetchTimeMs)
         case None => false // nothing to do if no longer leader
       }
@@ -586,14 +600,19 @@ class Partition(val topicPartition: TopicPartition,
    * since all callers of this private API acquire that lock
    */
   private def maybeIncrementLeaderHW(leaderReplica: Replica, curTime: Long = time.milliseconds): Boolean = {
+    //获取到当前partition的所有replica的LEO的值
     val allLogEndOffsets = assignedReplicas.filter { replica =>
       curTime - replica.lastCaughtUpTimeMs <= replicaLagTimeMaxMs || inSyncReplicas.contains(replica)
     }.map(_.logEndOffsetMetadata)
+    //从里面取一个最小值，作为HW的值
     val newHighWatermark = allLogEndOffsets.min(new LogOffsetMetadata.OffsetOrdering)
+    //获取老的HW值
     val oldHighWatermark = leaderReplica.highWatermark
 
     // Ensure that the high watermark increases monotonically. We also update the high watermark when the new
     // offset metadata is on a newer segment, which occurs whenever the log is rolled to a new segment.
+    //如果新的HW的值，大于老的HW的值
+    //就用新的HW的值，作为leader partition的HW值
     if (oldHighWatermark.messageOffset < newHighWatermark.messageOffset ||
       (oldHighWatermark.messageOffset == newHighWatermark.messageOffset && oldHighWatermark.onOlderSegment(newHighWatermark))) {
       leaderReplica.highWatermark = newHighWatermark

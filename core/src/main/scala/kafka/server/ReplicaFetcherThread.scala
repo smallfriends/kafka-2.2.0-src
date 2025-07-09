@@ -154,6 +154,8 @@ class ReplicaFetcherThread(name: String,
         .format(replica.logEndOffset, topicPartition, records.sizeInBytes, partitionData.highWatermark))
 
     // Append the leader's messages to the log
+    //把数据写到磁盘上面
+    //同时更新LEO的值
     val logAppendInfo = partition.appendRecordsToFollowerOrFutureReplica(records, isFuture = false)
 
     if (isTraceEnabled)

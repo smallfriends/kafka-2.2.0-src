@@ -150,6 +150,7 @@ abstract class AbstractFetcherManager[T <: AbstractFetcherThread](val name: Stri
           case Some(f) =>
             f.shutdown()
             //为每个任务都创建一个线程
+            //为副本抓取任务创建一个线程
             addAndStartFetcherThread(brokerAndFetcherId, brokerIdAndFetcherId)
           case None =>
             addAndStartFetcherThread(brokerAndFetcherId, brokerIdAndFetcherId)

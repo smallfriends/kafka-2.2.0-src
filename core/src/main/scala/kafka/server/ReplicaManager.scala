@@ -485,6 +485,7 @@ class ReplicaManager(val config: KafkaConfig,
     //判断传过来的acks参数是否合法
     if (isValidRequiredAcks(requiredAcks)) {
       val sTime = time.milliseconds
+      //这个就是服务端写完消息后，处理的结果
       val localProduceResults = appendToLocalLog(internalTopicsAllowed = internalTopicsAllowed,
         isFromClient = isFromClient, entriesPerPartition, requiredAcks)
       debug("Produce to local log in %d ms".format(time.milliseconds - sTime))
@@ -755,7 +756,8 @@ class ReplicaManager(val config: KafkaConfig,
         try {
           //找到对应写数据的分区
           val partition = getPartitionOrException(topicPartition, expectLeader = true)
-          //把数据写到leader partition里面
+          //TODO 把数据写到leader partition里面
+          //
           val info = partition.appendRecordsToLeader(records, isFromClient, requiredAcks)
           val numAppendedMessages = info.numMessages
 
@@ -838,6 +840,7 @@ class ReplicaManager(val config: KafkaConfig,
 
 
     def readFromLog(): Seq[(TopicPartition, LogReadResult)] = {
+      //从本地的磁盘里面去读取日志信息
       val result = readFromLocalLog(
         replicaId = replicaId,
         fetchOnlyFromLeader = fetchOnlyFromLeader,
@@ -846,6 +849,8 @@ class ReplicaManager(val config: KafkaConfig,
         hardMaxBytesLimit = hardMaxBytesLimit,
         readPartitionInfo = fetchInfos,
         quota = quota)
+      //TODO leader partition这儿维护了这个partition的所有replica的LEO值
+
       if (isFromFollower) updateFollowerLogReadResults(replicaId, result)
       else result
     }
@@ -995,6 +1000,7 @@ class ReplicaManager(val config: KafkaConfig,
     var limitBytes = fetchMaxBytes
     val result = new mutable.ArrayBuffer[(TopicPartition, LogReadResult)]
     var minOneMessage = !hardMaxBytesLimit
+    //读取分区信息
     readPartitionInfo.foreach { case (tp, fetchInfo) =>
       val readResult = read(tp, fetchInfo, limitBytes, minOneMessage)
       val recordBatchSize = readResult.info.records.sizeInBytes
@@ -1343,6 +1349,7 @@ class ReplicaManager(val config: KafkaConfig,
           partition.topicPartition -> InitialFetchState(leader, partition.getLeaderEpoch, fetchOffset)
         }.toMap
         //添加follower partition去leader partition那儿拉取数据任务
+
         replicaFetcherManager.addFetcherForPartitions(partitionsToMakeFollowerWithLeaderAndOffset)
 
         partitionsToMakeFollower.foreach { partition =>
@@ -1395,6 +1402,7 @@ class ReplicaManager(val config: KafkaConfig,
         case Some(partition) =>
           partition.getReplica(replicaId) match {
             case Some(replica) =>
+              //leader partition，对本地内存，去更新follow的LEO值
               partition.updateReplicaLogReadResult(replica, readResult)
             case None =>
               warn(s"Leader $localBrokerId failed to record follower $replicaId's position " +

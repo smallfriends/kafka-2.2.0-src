@@ -70,6 +70,7 @@ class Replica(val brokerId: Int,
    * high frequency.
    */
   def updateLogReadResult(logReadResult: LogReadResult) {
+    //最终更新的代码在这儿
     if (logReadResult.info.fetchOffsetMetadata.messageOffset >= logReadResult.leaderLogEndOffset)
       _lastCaughtUpTimeMs = math.max(_lastCaughtUpTimeMs, logReadResult.fetchTimeMs)
     else if (logReadResult.info.fetchOffsetMetadata.messageOffset >= lastFetchLeaderLogEndOffset)
