@@ -654,8 +654,13 @@ class Partition(val topicPartition: TopicPartition,
     val leaderHWIncremented = inWriteLock(leaderIsrUpdateLock) {
       leaderReplicaIfLocal match {
         case Some(leaderReplica) =>
+          //获取到要被移除出去的replica
+          //TODO 这个就是我们这节课的重点
+          //面试的时候也有可能会问
+          //或者对于我们理解kafka ISR机制是有帮助的
           val outOfSyncReplicas = getOutOfSyncReplicas(leaderReplica, replicaMaxLagTimeMs)
           if (outOfSyncReplicas.nonEmpty) {
+            //ISR列表里面 减去 要被移除出去的 等于 新的ISR列表
             val newInSyncReplicas = inSyncReplicas -- outOfSyncReplicas
             assert(newInSyncReplicas.nonEmpty)
             info("Shrinking ISR from %s to %s. Leader: (highWatermark: %d, endOffset: %d). Out of sync replicas: %s."
@@ -670,10 +675,12 @@ class Partition(val topicPartition: TopicPartition,
             )
 
             // update ISR in zk and in cache
+            //更新ISR列表
             updateIsr(newInSyncReplicas)
             replicaManager.isrShrinkRate.mark()
 
             // we may need to increment high watermark since ISR could be down to 1
+            //ISR列表更新了以后，HW的值有可能要发生变化
             maybeIncrementLeaderHW(leaderReplica)
           } else {
             false
@@ -703,6 +710,18 @@ class Partition(val topicPartition: TopicPartition,
      **/
     val candidateReplicas = inSyncReplicas - leaderReplica
 
+    //过滤延迟的replica
+    //移除延迟的replica只有一个条件，至少在这里看到的源码只有一个条件
+    //(time.milliseconds - r.lastCaughtUpTimeMs) > maxLagMs
+    //从ISR列表里面移除出去
+    //说明了意思就是，如果一个replica长时间【默认10秒】没有发送请求到leader partition去同步数据
+    //那么就从ISR列表里面移除出去
+
+    //TODO 结论：如果一个replica超过10秒没有到leader partition拉取数据
+    //那么就会从ISR列表里面移除出去
+    //ISR（P0，P1，P2）
+    //leader HW = min（2000，2010,900）
+    //HW值前面的数据，消费者才能看得到
     val laggingReplicas = candidateReplicas.filter(r =>
       r.logEndOffset != leaderReplica.logEndOffset && (time.milliseconds - r.lastCaughtUpTimeMs) > maxLagMs)
     if (laggingReplicas.nonEmpty)

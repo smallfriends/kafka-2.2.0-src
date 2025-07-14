@@ -257,6 +257,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         socketServer.startup(startupProcessors = false)
 
         /* start replica manager */
+        //核心参数 logManager
         replicaManager = createReplicaManager(isShuttingDown)
         replicaManager.startup()
 
