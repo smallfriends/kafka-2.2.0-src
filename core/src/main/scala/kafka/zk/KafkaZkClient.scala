@@ -92,6 +92,7 @@ class KafkaZkClient private[zk] (zooKeeperClient: ZooKeeperClient, isSecure: Boo
     * @param brokerInfo payload of the broker znode
     * @return broker epoch (znode create transaction id)
     */
+  //注册brokerid，返回一个epoch
   def registerBroker(brokerInfo: BrokerInfo): Long = {
     val path = brokerInfo.path
     val stat = checkedEphemeralCreate(path, brokerInfo.toJsonBytes)
